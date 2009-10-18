@@ -84,4 +84,16 @@ def add_results(info, results):
 
     return 'Sweet Processed'
 
+def check_should_build(client_info, True, reserve_time):
+    try:
+        p = Package.objects.get(slug=client_info['package'])
+        client = p.clients.get(host=client_info['host'])
+        tag = client.tags.filter(slug__istartswith='svn')[0]
+        print tag
+        #return (tag in client_info['tags'], 'WOOOOOOO')
+    except:
+        pass
+    return (True, "We always build, now!")
+
 dispatcher.register_function(add_results, 'add_results')
+dispatcher.register_function(check_should_build, 'check_should_build')
