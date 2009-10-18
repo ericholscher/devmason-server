@@ -53,6 +53,14 @@ class BuildHandler(BaseHandler):
             return {'specific_results': Result.objects.get(pk=data) }
         return {'results': Result.objects.filter(client__package__slug=slug) }
 
+    def create(self, request, slug):
+        from pony_server.views import add_results
+        import simplejson
+        info = simplejson.loads(request.POST['info'])
+        results = simplejson.loads(request.POST['results'])
+        add_results(info, results)
+        return rc.CREATED
+
 class TagHandler(BaseHandler):
     allowed_methods = ('GET', 'POST', 'DELETE')
     model = Tag
