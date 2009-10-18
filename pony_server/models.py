@@ -20,13 +20,13 @@ class Client(models.Model):
     arch = models.CharField(max_length=200, blank=True, null=True)
     duration = models.FloatField( blank=True, null=True)
     host = models.CharField(max_length=200, blank=True, null=True)
-    package = models.ForeignKey('Package', related_name='client', blank=True, null=True)
+    package = models.ForeignKey('Package', related_name='clients', blank=True, null=True)
     success = models.BooleanField()
     tags = models.ManyToManyField('Tag', related_name='clients', blank=True, null=True)
     tempdir = models.CharField(max_length=200, blank=True, null=True)
 
     def __unicode__(self):
-        return u"%s : %s : %s" % (self.host, self.arch, '')
+        return u"%s : %s : %s" % (self.host, self.arch, self.package)
 
 class Result(models.Model):
     name = models.CharField(max_length=200)
