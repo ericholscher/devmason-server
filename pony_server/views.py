@@ -3,6 +3,25 @@ from django.http import HttpResponse
 from pony_server.models import Client, Result, Package, Tag
 from django.template.defaultfilters import slugify
 
+
+
+from django.views.generic import list_detail
+
+def index(request):
+    qs = Client.objects.all()
+    return list_detail.object_list(request, queryset=qs)
+
+
+
+
+
+
+
+
+
+
+
+
 # Create a Dispatcher; this handles the calls and translates info to function maps
 dispatcher = SimpleXMLRPCDispatcher(allow_none=False, encoding=None) # Python 2.5
 
@@ -31,7 +50,6 @@ def xmlrpc(request):
 
 def add_results(info, results):
     "Return sweet results"
-    import ipdb; ipdb.set_trace()
     p = info.get('package', '')
     package, created = Package.objects.get_or_create(name=p, slug=slugify(p))
 
