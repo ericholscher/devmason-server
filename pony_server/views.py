@@ -2,24 +2,30 @@ from SimpleXMLRPCServer import SimpleXMLRPCDispatcher
 from django.http import HttpResponse
 from pony_server.models import Client, Result, Package, Tag
 from django.template.defaultfilters import slugify
-
-
-
+from django.shortcuts import render_to_response
 from django.views.generic import list_detail
 
 def index(request):
+    ret_val = {}
     qs = Client.objects.all()
+    for client in qs:
+        print client
+        if ret_val.has_key(client.package.name):
+            ret_val[client.package.name].append(client)
+        else:
+            ret_val[client.package.name] = [client]
+
+    return render_to_response('pony_server/client_list.html',
+                              {'object_list': ret_val})
     return list_detail.object_list(request, queryset=qs)
 
+def package_list(request, slug):
+    qs = Result.objects.filter(client__package__slug=slug)
+    return list_detail.object_list(request, queryset=qs)
 
-
-
-
-
-
-
-
-
+def result_detail(request, slug, id):
+    qs = Result.objects.filter(client__package__slug=slug)
+    return list_detail.object_detail(request, qs, object_id=id)
 
 
 # Create a Dispatcher; this handles the calls and translates info to function maps
@@ -78,10 +84,8 @@ def add_results(info, results):
             type = result.get('type', ''),
             version_type = result.get('version_type', ''),
             version_info = result.get('version_info', ''),
+            client = client,
         )
-
-    client.results.add(res)
-
     return 'Sweet Processed'
 
 def check_should_build(client_info, True, reserve_time):

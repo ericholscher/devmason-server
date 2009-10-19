@@ -1,3 +1,23 @@
-{% for object in object_list %}
-<a href="{{ object.get_absolute.url }}">{{ object }}</a><br>
-{% endfor %}
+{% extends "nathan_base.html" %}
+
+{% block title %} Latest Results {% endblock %}
+
+{% block content %}
+
+<div class="sites">
+  {% for key, list in object_list.items %}
+  <div class="site">
+    <h3> {{ key }} </h3>
+    {% for client in list %}
+    <p class="{% if forloop.last %}last{% endif %}{% if forloop.first %} first{% endif %}">
+      <a class="{{ client.success|yesno:'passed,succeeded' }}" href="{% url package_list client.package.slug %}" title="{{ client.slug }}">
+        <strong>{{ client.success|yesno:"PASSED,FAILED" }}</strong>
+        <small><em>{{ client.host }}</em></small>
+      </a>
+    </p>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}
