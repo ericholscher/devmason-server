@@ -19,13 +19,14 @@ class PonyTests(TestCase):
         except ValueError:
             self.fail('Response was invalid JSON')
         
-        # see http://code.google.com/p/unittest-ext/source/browse/trunk/unittestnew/case.py#698
+        # inspired by
+        # http://code.google.com/p/unittest-ext/source/browse/trunk/unittestnew/case.py#698
         self.assert_(isinstance(json, dict), 'JSON response is not a dictionary.')
         self.assert_(isinstance(expected, dict), 'Expected argument is not a dictionary.')
         if json != expected:
-            msg = ('\n' + '\n'.join(difflib.ndiff(
-                   pprint.pformat(json).splitlines(),
-                   pprint.pformat(expected).splitlines())))
+            diff = difflib.ndiff(pprint.pformat(json).splitlines(), 
+                                 pprint.pformat(expected).splitlines())
+            msg = ('\n' + '\n'.join(diff))
             self.fail(msg)
 
     def test_package_list(self):
