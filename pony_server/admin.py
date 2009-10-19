@@ -1,8 +1,6 @@
 from django.contrib import admin
-from pony_server.models import Result, Client, Package, Tag
+from pony_server.models import Project, Build, BuildStep
 
-
-admin.site.register(Client)
-admin.site.register(Result)
-admin.site.register(Package)
-admin.site.register(Tag)
+admin.site.register(Project)
+admin.site.register(Build)
+admin.site.register(BuildStep)

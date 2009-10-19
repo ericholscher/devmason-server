@@ -1,0 +1,46 @@
+[
+  {
+    "model": "pony_server.project",
+    "pk": 1,
+    "fields": {
+      "name": "pony",
+      "slug": "pony"
+    }
+  },
+  {
+    "model": "pony_server.build",
+    "pk": 1,
+    "fields": {
+      "project": 1,
+      "success": true,
+      "started": "2009-10-19 16:22:00",
+      "finished": "2009-10-19 16:25:00",
+      "host": "example.com",
+      "arch": "linux-i386"
+    }
+  },
+  {
+    "model": "pony_server.buildstep",
+    "pk": 1,
+    "fields": {
+      "build": 1,
+      "success": true,
+      "started": "2009-10-19 16:22:00",
+      "finished": "2009-10-19 16:21:00",
+      "name": "checkout",
+      "output": "OK"
+    }
+  },
+  {
+    "model": "pony_server.buildstep",
+    "pk": 2,
+    "fields": {
+      "build": 1,
+      "success": true,
+      "started": "2009-10-19 16:21:30",
+      "finished": "2009-10-19 16:25:00",
+      "name": "test",
+      "output": "OK"
+    }
+  }
+]

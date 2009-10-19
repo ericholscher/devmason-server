@@ -1,10 +1,8 @@
 from django.conf.urls.defaults import *
+from .utils import Resource
+from .handlers import ProjectListHandler, ProjectHandler
 
 urlpatterns = patterns('',
-    # Example:
-    (r'^api/', include('pony_server.api.urls')),
-    url(r'^(?P<slug>[^/]+)/(?P<id>\d+)/', 'pony_server.views.result_detail', name='result_detail'),
-    url(r'^(?P<slug>[^/]+)/', 'pony_server.views.package_list', name='package_list'),
-    url(r'xmlrpc', 'pony_server.views.xmlrpc', name='xmlrpc'),
-    url(r'^$', 'pony_server.views.index', name='index'),
+   url(r'^$',                   Resource(ProjectListHandler),   name='project_list'),
+   url(r'^(?P<slug>[\w-]+)$',   Resource(ProjectHandler),       name='project_detail'),
 )
