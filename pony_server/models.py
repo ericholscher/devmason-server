@@ -1,13 +1,15 @@
 from django.db import models
 
-# Create your models here.
-
 class Package(models.Model):
     name = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
 
     def __unicode__(self):
         return self.name
+
+    @models.permalink
+    def get_absolute_url(self):
+        return ('package_list', [self.slug])
 
 class Tag(models.Model):
     name = models.CharField(max_length=200)
@@ -42,4 +44,12 @@ class Result(models.Model):
     version_info = models.CharField(max_length=200, blank=True, null=True)
 
     def __unicode__(self):
-        return "%s: %s" % (self.client.package, self.name)
+        return "%s: %s" % (self.client.package, self.client.host)
+
+    @models.permalink
+    def get_absolute_url(self):
+        return ('result_detail', (), {
+            'slug': self.client.package.slug,
+            'id': self.pk
+            }
+        )
