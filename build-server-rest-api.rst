@@ -207,17 +207,19 @@ Representation:
     
 Links:
 
-================  ====================================================
+================  ==========================================================
 Rel               Links to                                            
-================  ====================================================
+================  ==========================================================
 ``self``          This `build list`_                                  
-``project``       The project_ this is a list of builds for.          
+``project``       The project_ this is a list of builds for (if applicable).
+``user``          The user_ this is a list of builds for (if applicable).
+``tag``           The tag_ this is a list of builds for (if applicable).
 ``latest-build``  URI for the redirect to this project's latest build.
 ``next``          The next page of builds (if applicable).            
 ``previous``      The previous page of builds (if applicable).        
 ``first``         The first page of builds.                           
 ``last``          The last page of builds.                            
-================  ====================================================
+================  ==========================================================
 
 Build progress
 ~~~~~~~~~~~~~~
@@ -247,7 +249,7 @@ Representation:
 Notes:
 
 .. [#] Build steps may include arbitrary extra build info in the record.
-
+\
 
 Incremental build
 ~~~~~~~~~~~~~~~~~
