@@ -96,7 +96,9 @@ API Reference
 Representation formats
 ----------------------
 
-JSON. UTF-8.
+* JSON.
+* UTF-8.
+* All datetimes in RFC 2822.
 
 URIs
 ----
@@ -154,8 +156,8 @@ Representation:
 
     {
       'success': true,                              # did the build succeed?
-      'started': 'Mon Oct 19 11:33:37 CDT 2009',
-      'finished': 'Mon Oct 19 11:35:41 CDT 2009,
+      'started': 'Tue, 20 Oct 2009 10:20:00 -0500',
+      'finished': 'Tue, 20 Oct 2009 10:22:00 -0500,
       
       'tags': ['list', 'of', 'tags'],
       
@@ -238,8 +240,8 @@ Representation:
 
     {
       'success': true,                              # did this step succeed?
-      'started': 'Mon Oct 19 11:33:37 CDT 2009',
-      'finished': 'Mon Oct 19 11:35:41 CDT 2009,
+      'started': 'Tue, 20 Oct 2009 10:20:00 -0500',
+      'finished': 'Tue, 20 Oct 2009 10:22:00 -0500,
       'name': 'checkout',                           # human-readable name for the step
       'output': '...'                               # stdout for this step
       'errout': '...'                               # stderr for this step
@@ -262,7 +264,7 @@ Representation
 
     {
       'incremental': true,                          # never false
-      'started': 'Mon Oct 19 11:33:37 CDT 2009',    # when the build started on
+      'started': 'Tue, 20 Oct 2009 10:20:00 -0500', # when the build started on
                                                     # the client (not when the
                                                     # packet was posted!)
       'client': {
