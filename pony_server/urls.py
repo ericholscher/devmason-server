@@ -1,8 +1,22 @@
 from django.conf.urls.defaults import *
 from .utils import Resource
-from .handlers import ProjectListHandler, ProjectHandler
+from . import handlers
 
 urlpatterns = patterns('',
-   url(r'^$',                   Resource(ProjectListHandler),   name='project_list'),
-   url(r'^(?P<slug>[\w-]+)$',   Resource(ProjectHandler),       name='project_detail'),
+    url(r'^$',
+        Resource(handlers.ProjectListHandler),
+        name = 'project_list'
+    ),
+    url(r'^(?P<slug>[\w-]+)$',
+        Resource(handlers.ProjectHandler),
+        name = 'project_detail'
+    ),
+    url(r'^(?P<slug>[\w-]+)/builds$',
+        Resource(handlers.ProjectBuildListHandler),
+        name = 'project_build_list'
+    ),
+    url(r'^(?P<project_slug>[\w-]+)/builds/(?P<build_id>\d+)$',
+        Resource(handlers.BuildHandler),
+        name = 'build_detail'
+    ),
 )

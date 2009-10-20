@@ -11,6 +11,8 @@ from django.core import urlresolvers
 from django.http import Http404
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
+from django.utils import dateformat
+from django.utils.http import urlencode
 
 class Resource(piston.resource.Resource):
     """Chooses an emitter based on mime types."""
@@ -45,39 +47,21 @@ class HTMLTemplateEmitter(piston.emitters.Emitter):
 
 piston.emitters.Emitter.register(HTMLTemplateEmitter, 'html', 'text/html')
 
-class BaseHandler(piston.handler.BaseHandler):
+def link(rel, to_handler, *args, **getargs):
     """
-    Base class for all handlers in pony_server. Adds:
-    
-        * Helper for building the links element.
+    Create a link resource - a dict with rel, href, and allowed_methods keys.
+    Extra args taken by the view may be passed in as *args; GET may be passed
+    as **kwargs.
     """
+    href = urlresolvers.reverse(to_handler.viewname, args=args)
+    if getargs:
+        href = "%s?%s" % (href, urlencode(getargs))
+    return {
+        'rel': rel,
+        'href': href,
+        'allowed_methods': to_handler.allowed_methods
+    }
     
-    # Child classes should set this.
-    viewname = None
-    
-    def build_links(self, request, *args):
-        """
-        Build a list of Link resources - dicts with rel, href, and
-        allowed_methods keys. Each *args argument is a (rel, handler) pair.
-        Extra args taken by the view may be passed in as extra elements in the
-        args tuples.
-        """
-        links = []
-        for arg in args:
-            rel, handler = arg[0:2]
-            rest = arg[2:]
-            links.append({
-                'rel': rel,
-                'href': handler.uri(request, *rest),
-                'allowed_methods': handler.allowed_methods
-            })
-        return links
-    
-    @classmethod
-    def uri(cls, request, *args):
-        """Return the full URI for this handler, including host."""
-        return request.build_absolute_uri(urlresolvers.reverse(cls.viewname, args=args))
-
 # Needed now; will be fixed in Piston 0.2.3
 def allow_404(func): 
     """ 
@@ -91,3 +75,5 @@ def allow_404(func):
             return rc.NOT_FOUND 
     return wrapper
 
+def format_dt(dt):
+    return dateformat.format(dt, 'r')

@@ -1,7 +1,8 @@
-from django.core import urlresolvers
+from django.core.paginator import Paginator, InvalidPage
 from django.shortcuts import get_object_or_404
-from .models import Project
-from .utils import BaseHandler, allow_404
+from piston.handler import BaseHandler
+from .models import Project, Build, BuildStep
+from .utils import link, allow_404, format_dt
 
 class ProjectListHandler(BaseHandler):
     allowed_methods = ['GET']
@@ -10,14 +11,18 @@ class ProjectListHandler(BaseHandler):
     def read(self, request):
         return {
             'projects': Project.objects.all(),
-            'links': self.build_links(request, ('self', ProjectListHandler))
+            'links': [link('self', ProjectListHandler)]
         }
 
 class ProjectHandler(BaseHandler):
     allowed_methods = ['GET']
     model = Project
     viewname = 'project_detail'
-    fields = ('name', 'slug', 'owner')
+    fields = ('name', 'slug', 'owner', 'links')
+    
+    @allow_404
+    def read(self, request, slug):
+        return get_object_or_404(Project, slug=slug)
     
     @classmethod
     def owner(cls, project):
@@ -25,85 +30,124 @@ class ProjectHandler(BaseHandler):
             return project.owner.username
         else:
             return ''
+            
+    @classmethod
+    def links(cls, project):
+        return [
+            link('self', ProjectHandler, project.slug),
+            link('build-list', ProjectBuildListHandler, project.slug),
+            # link('latest-build', ProjectLatestBuildHandler, project.slug),
+            # link('tag-list', ProjectTagListHandler, project.slug),
+        ]
+        
+class ProjectBuildListHandler(BaseHandler):
+    allowed_methods = ['GET']
+    viewname = 'project_build_list'
     
     @allow_404
     def read(self, request, slug):
-        proj = get_object_or_404(Project, slug=slug)
+        project = get_object_or_404(Project, slug=slug)
+        builds = project.builds.all()
+        
+        try:
+            per_page = int(request.GET['per_page'])
+        except (ValueError, KeyError):
+            per_page = 25
+        
+        paginator = Paginator(builds, per_page)
+        
+        try:
+            page = paginator.page(request.GET['page'])
+        except (KeyError, InvalidPage):
+            page = paginator.page(1)
+                    
+        links = [
+           link('self', ProjectBuildListHandler, project.slug, 
+                page=page.number, per_page=per_page),
+           link('project', ProjectHandler, project.slug)
+           # link('latest-build', ProjectLatestBuildHandler, project.slug),
+        ]
+        if page.has_other_pages():
+            links.extend([
+                link('first', ProjectBuildListHandler, project.slug, 
+                     page=1, per_page=per_page),
+                link('last', ProjectBuildListHandler, project.slug, 
+                     page=paginator.num_pages, per_page=per_page),
+            ])
+            if page.has_previous_page():
+                links.append(
+                    link('previous', ProjectBuildListHandler, project.slug, 
+                         page=page.previous_page_number(), per_page=per_page))
+            if page.has_next_page():
+                links.append(
+                    link('next', ProjectBuildListHandler, project.slug,
+                         page=page.next_page_number(), per_page=per_page))
+        
         return {
-            'name': proj.name,
-            'slug': proj.slug,
-            'owner': self.owner(proj),
-            'links': self.build_links(request, 
-                ('self', ProjectHandler, slug),
-            )
+            'builds': page.object_list,
+            'count': paginator.count,
+            'num_pages': paginator.num_pages,
+            'page': page.number,
+            'paginated': page.has_other_pages(),
+            'per_page': per_page,
+            'links': links,
         }
 
-# def info_for_package(package):
-#     ret_val = {}
-#     for client in package.clients.all():
-#        ret_val[client.host] = {'client': client,
-#                               'results': client.results.all() }
-#     return ret_val
-# 
-# class RootHandler(BaseHandler):
-#     allowed_methods = ('GET',)
-#     def read(self, request):
-#         return Package.objects.all()
-# 
-# class PackageHandler(BaseHandler):
-#     allowed_methods = ('GET', 'POST', 'DELETE')
-#     model = Package
-# 
-#     def read(self, request, slug):
-#        try:
-#           package = Package.objects.get(slug=slug)
-#           return info_for_package(package)
-#        except:
-#           last_10 = Package.objects.filter(slug__istartswith=slug)[:10]
-#           return last_10
-# 
-#     @throttle(5, 10*60) # allow 5 times in 10 minutes
-#     def create(self, request, slug):
-#         package, created = Package.objects.get_or_create(slug=slug)
-#         if created:
-#             package.name = request.POST['name']
-#             package.save()
-#             return rc.CREATED
-#         else:
-#             return rc.FORBIDDEN.write('Package already exists')
-# 
-#     def delete(self, request, slug):
-#         package = Package.objects.get(slug=slug)
-#         package.delete()
-#         return rc.DELETED # returns HTTP 204
-# 
-# 
-# class BuildHandler(BaseHandler):
-#     allowed_methods = ('GET', 'POST', 'DELETE')
-#     model = Result
-# 
-#     def read(self, request, slug, data=None, latest=False):
-#         if latest:
-#             return {'latest_results': Result.objects.filter(client__package__slug=slug) }
-#         if data:
-#             return {'specific_results': Result.objects.get(pk=data) }
-#         return {'results': Result.objects.filter(client__package__slug=slug) }
-# 
-#     def create(self, request, slug):
-#         from pony_server.views import add_results
-#         import simplejson
-#         info = simplejson.loads(request.POST['info'])
-#         results = simplejson.loads(request.POST['results'])
-#         add_results(info, results)
-#         return rc.CREATED
-# 
-# class TagHandler(BaseHandler):
-#     allowed_methods = ('GET', 'POST', 'DELETE')
-#     model = Tag
-# 
-#     def read(self, request, slug, data=None, latest=False):
-#         if latest:
-#             return {'latest_results': Result.objects.filter(client__tags__slug=data) }
-#         if data:
-#             return {'tag_results': Result.objects.filter(client__tags__slug=data) }
-#         return {'all_tags': Tag.objects.filter(clients__package__slug=slug) }
+class BuildHandler(BaseHandler):
+    allowed_methods = ['GET']
+    model = Build
+    fields = ('success', 'started', 'finished', 'tags',
+              'client', 'results', 'links')
+    viewname = 'build_detail'
+    
+    @allow_404
+    def read(self, request, project_slug, build_id):
+        return get_object_or_404(Build, project__slug=project_slug, pk=build_id)
+        
+    @classmethod
+    def tags(cls, build):
+        return [t.name for t in build.tags]
+        
+    @classmethod
+    def started(cls, build):
+        return format_dt(build.started)
+    
+    @classmethod
+    def finished(cls, build):
+        return format_dt(build.finished)
+            
+    @classmethod
+    def client(cls, build):
+        details = {
+            'host': build.host,
+            'user': build.user and build.user.username or '',
+            'arch': build.arch,
+        }
+        details.update(build.extra_info)
+        return details
+    
+    @classmethod
+    def results(cls, build):
+        rv = []
+        for step in build.steps.all():
+            step_data = {
+                'success': step.success,
+                'started': format_dt(step.started),
+                'finished': format_dt(step.finished),
+                'name': step.name,
+                'output': step.output,
+                'errout': step.errout,
+            }
+            step_data.update(step.extra_info)
+            rv.append(step_data)
+        return rv
+    
+    @classmethod
+    def links(cls, build):
+        links = [
+            link('self', BuildHandler, build.project.slug, build.pk),
+            link('project', ProjectHandler, build.project.slug),
+        ]
+        # for tag in build.tags:
+        #     links.append(link('tag', TagHandler, build.project.slug, tag.name))
+        return links
