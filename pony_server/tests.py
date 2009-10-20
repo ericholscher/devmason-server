@@ -42,7 +42,10 @@ class PonyTests(TestCase):
                      u'rel': u'self'},
                     {u'allowed_methods': [u'GET'],
                      u'href': u'/pony/builds',
-                     u'rel': u'build-list'}
+                     u'rel': u'build-list'},
+                    {u'allowed_methods': [u'GET'],
+                     u'href': u'/pony/builds/latest',
+                     u'rel': u'latest-build'}
                 ]
             }],
             u'links': [{
@@ -56,7 +59,7 @@ class PonyTests(TestCase):
         r = self.api_client.get('/pony')
         self.assertJsonEqual(r, {
             u'name': 'pony',
-            u'owner': '',
+            u'owner': u'',
             u'slug': 'pony',
             u'links': [
                 {u'allowed_methods': [u'GET'], 
@@ -64,7 +67,10 @@ class PonyTests(TestCase):
                  u'rel': u'self'},
                 {u'allowed_methods': [u'GET'], 
                  u'href': u'/pony/builds', 
-                 u'rel': u'build-list'}
+                 u'rel': u'build-list'},
+                {u'allowed_methods': [u'GET'],
+                 u'href': u'/pony/builds/latest',
+                 u'rel': u'latest-build'}
             ]
         })
         
@@ -111,6 +117,14 @@ class PonyTests(TestCase):
                  u'rel': u'self'},
                 {u'allowed_methods': [u'GET'],
                  u'href': u'/pony',
-                 u'rel': u'project'}
+                 u'rel': u'project'},
+                {u'allowed_methods': [u'GET'],
+                 u'href': u'/pony/builds/latest',
+                 u'rel': u'latest-build'}
             ]
         })
+        
+    def test_latest_build(self):
+        r = self.api_client.get('/pony/builds/latest')
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(r['Location'], 'http://testserver/pony/builds/1')

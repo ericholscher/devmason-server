@@ -15,8 +15,12 @@ urlpatterns = patterns('',
         Resource(handlers.ProjectBuildListHandler),
         name = 'project_build_list'
     ),
-    url(r'^(?P<project_slug>[\w-]+)/builds/(?P<build_id>\d+)$',
+    url(r'^(?P<slug>[\w-]+)/builds/(?P<build_id>\d+)$',
         Resource(handlers.BuildHandler),
         name = 'build_detail'
     ),
+    url(r'^(?P<slug>[\w-]+)/builds/latest$',
+        Resource(handlers.LatestBuildHandler),
+        name = 'latest_build'
+    )
 )

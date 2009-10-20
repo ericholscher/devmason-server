@@ -1,5 +1,5 @@
 from django.core.paginator import Paginator, InvalidPage
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from piston.handler import BaseHandler
 from .models import Project, Build, BuildStep
 from .utils import link, allow_404, format_dt
@@ -36,7 +36,7 @@ class ProjectHandler(BaseHandler):
         return [
             link('self', ProjectHandler, project.slug),
             link('build-list', ProjectBuildListHandler, project.slug),
-            # link('latest-build', ProjectLatestBuildHandler, project.slug),
+            link('latest-build', LatestBuildHandler, project.slug),
             # link('tag-list', ProjectTagListHandler, project.slug),
         ]
         
@@ -64,8 +64,8 @@ class ProjectBuildListHandler(BaseHandler):
         links = [
            link('self', ProjectBuildListHandler, project.slug, 
                 page=page.number, per_page=per_page),
-           link('project', ProjectHandler, project.slug)
-           # link('latest-build', ProjectLatestBuildHandler, project.slug),
+           link('project', ProjectHandler, project.slug),
+           link('latest-build', LatestBuildHandler, project.slug),
         ]
         if page.has_other_pages():
             links.extend([
@@ -101,8 +101,8 @@ class BuildHandler(BaseHandler):
     viewname = 'build_detail'
     
     @allow_404
-    def read(self, request, project_slug, build_id):
-        return get_object_or_404(Build, project__slug=project_slug, pk=build_id)
+    def read(self, request, slug, build_id):
+        return get_object_or_404(Build, project__slug=slug, pk=build_id)
         
     @classmethod
     def tags(cls, build):
@@ -151,3 +151,13 @@ class BuildHandler(BaseHandler):
         # for tag in build.tags:
         #     links.append(link('tag', TagHandler, build.project.slug, tag.name))
         return links
+        
+class LatestBuildHandler(BaseHandler):
+    allowed_methods = ['GET']
+    viewname = 'latest_build'
+    
+    @allow_404
+    def read(self, request, slug):
+        project = get_object_or_404(Project, slug=slug)
+        build = project.builds.latest('finished')
+        return redirect('build_detail', slug, build.pk)
