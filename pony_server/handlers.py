@@ -1,6 +1,8 @@
 from django.core.paginator import Paginator, InvalidPage
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from piston.handler import BaseHandler
+from tagging.models import Tag
 from .models import Project, Build, BuildStep
 from .utils import link, allow_404, format_dt
 
@@ -39,8 +41,47 @@ class ProjectHandler(BaseHandler):
             link('latest-build', LatestBuildHandler, project.slug),
             # link('tag-list', ProjectTagListHandler, project.slug),
         ]
+
+class PaginatedBuildHandler(BaseHandler):
+    """Helper base class to provide paginated builds"""
+    
+    def handle_paginated_builds(self, builds, qdict, link_callback, extra={}):
+        try:
+            per_page = int(qdict['per_page'])
+        except (ValueError, KeyError):
+            per_page = 25
         
-class ProjectBuildListHandler(BaseHandler):
+        paginator = Paginator(builds, per_page)
+        
+        try:
+            page = paginator.page(qdict['page'])
+        except (KeyError, InvalidPage):
+            page = paginator.page(1)
+        
+        if not page.object_list:
+            raise Http404("No builds")
+        
+        link_callback('self', page=page.number, per_page=per_page)
+        
+        if page.has_other_pages():
+            link_callback('first', page=1, per_page=per_page)
+            link_callback('last', page=paginator.num_pages, per_page=per_page)
+            if page.has_previous_page():
+                link_callback('previous', page=page.previous_page_number(), per_page=per_page)
+            if page.has_next_page():
+                link_callback('next', page=page.next_page_number(), per_page=per_page)
+        
+        response = {
+            'builds': page.object_list,
+            'count': paginator.count,
+            'num_pages': paginator.num_pages,
+            'page': page.number,
+            'paginated': page.has_other_pages(),
+            'per_page': per_page,
+        }
+        return dict(response, **extra)
+        
+class ProjectBuildListHandler(PaginatedBuildHandler):
     allowed_methods = ['GET']
     viewname = 'project_build_list'
     
@@ -49,49 +90,17 @@ class ProjectBuildListHandler(BaseHandler):
         project = get_object_or_404(Project, slug=slug)
         builds = project.builds.all()
         
-        try:
-            per_page = int(request.GET['per_page'])
-        except (ValueError, KeyError):
-            per_page = 25
-        
-        paginator = Paginator(builds, per_page)
-        
-        try:
-            page = paginator.page(request.GET['page'])
-        except (KeyError, InvalidPage):
-            page = paginator.page(1)
-                    
         links = [
-           link('self', ProjectBuildListHandler, project.slug, 
-                page=page.number, per_page=per_page),
-           link('project', ProjectHandler, project.slug),
-           link('latest-build', LatestBuildHandler, project.slug),
+            link('project', ProjectHandler, project.slug),
+            link('latest-build', LatestBuildHandler, project.slug),
         ]
-        if page.has_other_pages():
-            links.extend([
-                link('first', ProjectBuildListHandler, project.slug, 
-                     page=1, per_page=per_page),
-                link('last', ProjectBuildListHandler, project.slug, 
-                     page=paginator.num_pages, per_page=per_page),
-            ])
-            if page.has_previous_page():
-                links.append(
-                    link('previous', ProjectBuildListHandler, project.slug, 
-                         page=page.previous_page_number(), per_page=per_page))
-            if page.has_next_page():
-                links.append(
-                    link('next', ProjectBuildListHandler, project.slug,
-                         page=page.next_page_number(), per_page=per_page))
         
-        return {
-            'builds': page.object_list,
-            'count': paginator.count,
-            'num_pages': paginator.num_pages,
-            'page': page.number,
-            'paginated': page.has_other_pages(),
-            'per_page': per_page,
-            'links': links,
-        }
+        def make_link(rel, **kwargs):
+            links.append(link(rel, self, project.slug, **kwargs))
+        
+        response = self.handle_paginated_builds(builds, request.GET, make_link)
+        response['links'] = links
+        return response
 
 class BuildHandler(BaseHandler):
     allowed_methods = ['GET']
@@ -148,8 +157,8 @@ class BuildHandler(BaseHandler):
             link('self', BuildHandler, build.project.slug, build.pk),
             link('project', ProjectHandler, build.project.slug),
         ]
-        # for tag in build.tags:
-        #     links.append(link('tag', TagHandler, build.project.slug, tag.name))
+        for tag in build.tags:
+            links.append(link('tag', TagHandler, build.project.slug, tag.name))
         return links
         
 class LatestBuildHandler(BaseHandler):
@@ -161,3 +170,57 @@ class LatestBuildHandler(BaseHandler):
         project = get_object_or_404(Project, slug=slug)
         build = project.builds.latest('finished')
         return redirect('build_detail', slug, build.pk)
+        
+class ProjectTagListHandler(BaseHandler):
+    allowed_methods = ['GET']
+    viewname = 'project_tag_list'
+    
+    @allow_404
+    def read(self, request, slug):
+        project = get_object_or_404(Project, slug=slug)
+        tags = Tag.objects.usage_for_model(Build, filters={'project': project})
+        
+        links = [
+            link('self', ProjectTagListHandler, project.slug),
+            link('project', ProjectHandler, project.slug),
+        ]
+        links.extend(link('tag', TagHandler, project.slug, tag.name) for tag in tags)
+        
+        return {
+            'tags': [tag.name for tag in tags],
+            'links': links,
+        }
+        
+class TagHandler(PaginatedBuildHandler):
+    allowed_methods = ['GET']
+    viewname = 'tag_detail'
+    model = Tag
+    
+    @allow_404
+    def read(self, request, slug, tags):
+        project = get_object_or_404(Project, slug=slug)
+        tag_list = tags.split(';')
+        builds = Build.tagged.with_all(tags, queryset=project.builds.all())
+        
+        links = []
+        def make_link(rel, **kwargs):
+            links.append(link(rel, self, project.slug, tags, **kwargs))
+        
+        response = self.handle_paginated_builds(builds, request.GET, make_link, {'tags': tag_list})
+        response['links'] = links
+        return response
+        
+class ProjectLatestTaggedBuildHandler(BaseHandler):
+    allowed_methods = ['GET']
+    viewname = 'latest_tagged_build'
+    
+    @allow_404
+    def read(self, request, slug, tags):
+        project = get_object_or_404(Project, slug=slug)
+        tag_list = tags.split(';')
+        builds = Build.tagged.with_all(tags, queryset=project.builds.all())
+        try:
+            b = builds[0]
+        except IndexError:
+            raise Http404("No builds")
+        return redirect('build_detail', project.slug, b.pk)

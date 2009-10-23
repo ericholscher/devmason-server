@@ -22,5 +22,17 @@ urlpatterns = patterns('',
     url(r'^(?P<slug>[\w-]+)/builds/latest$',
         Resource(handlers.LatestBuildHandler),
         name = 'latest_build'
-    )
+    ),
+    url(r'^(?P<slug>[\w-]+)/tags$',
+        Resource(handlers.ProjectTagListHandler),
+        name = 'project_tag_list'
+    ),
+    url(r'^(?P<slug>[\w-]+)/tags/(?P<tags>[^/]+)/latest$',
+        Resource(handlers.ProjectLatestTaggedBuildHandler),
+        name = 'latest_tagged_build'
+    ),
+    url(r'^(?P<slug>[\w-]+)/tags/(?P<tags>.*)$',
+        Resource(handlers.TagHandler),
+        name = 'tag_detail'
+    ),
 )

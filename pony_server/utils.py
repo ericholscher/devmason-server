@@ -72,7 +72,7 @@ def allow_404(func):
         try: 
             return func(*args, **kwargs) 
         except Http404: 
-            return rc.NOT_FOUND 
+            return piston.utils.rc.NOT_FOUND 
     return wrapper
 
 def format_dt(dt):

@@ -342,13 +342,14 @@ Rel       Links to
 Tag
 ~~~
 
-A tag or set of tags.
+Tag detail.
 
 .. parsed-literal::
 
     {
       'tags': ['list', 'of', 'tags'],       # Or just a single ['tag'] if this
-                                            # is one tag.
+                                            # is one tag.      
+                                            
       'builds': [{Build_}, ...],
       
       'count': 100,                         # total number of builds w/this tag
@@ -362,11 +363,16 @@ A tag or set of tags.
     
 Links:
 
-===========  ======================================================
-Rel          Links to                                            
-===========  ======================================================
-``self``     This `tag`_ (set)
-``project``  The project_ in question.
+================  ======================================================
+Rel               Links to                                            
+================  ======================================================
+``self``          This `tag`_ (set)
+``project``       The project_ in question.
+``latest-build``  URI for the redirect to this project's latest build.
+``next``          The next page of builds (if applicable).            
+``previous``      The previous page of builds (if applicable).        
+``first``         The first page of builds.                           
+``last``          The last page of builds.                            
 ===========  ======================================================
 
 Tag list
@@ -377,13 +383,7 @@ Representation:
 .. parsed-literal::
 
     {
-      'tags': [{Tag_}, ...],
-      
-      'count': 100,                 # total number of tags available
-      'num_pages': 4,               # total number of pages
-      'page': 1                     # current page number
-      'paginated': true             # is this list paginated?
-      'per_page': 25,               # number of tags per page
+      'tags': ['tag1', 'tag2', 'tag3'],
       'links': [{Link_, ...}]
     }
     
@@ -394,6 +394,7 @@ Rel          Links to
 ===========  ======================================================
 ``self``     This `tag list`_                                  
 ``project``  The project_ in question.
+``tag``      Each tag_ used by the project gets a link.
 ===========  ======================================================
 
 User
