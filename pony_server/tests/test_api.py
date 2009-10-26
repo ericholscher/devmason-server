@@ -3,7 +3,7 @@ import difflib
 from django.contrib.auth.models import User
 from django.test import TestCase, Client
 from django.utils import simplejson
-from .models import Build
+from ..models import Build
 
 class PonyTests(TestCase):
     urls = 'pony_server.urls'
@@ -36,6 +36,7 @@ class PonyTests(TestCase):
             msg = ('\n' + '\n'.join(diff))
             self.fail(msg)
 
+class PackageListTests(PonyTests):
     def test_get_package_list(self):
         r = self.api_client.get('/')
         self.assertJsonEqual(r, {
@@ -63,7 +64,8 @@ class PonyTests(TestCase):
                 u'rel': u'self'
             }]
         })
-        
+
+class PackageDetailTests(PonyTests):
     def test_get_package_detail(self):
         r = self.api_client.get('/pony')
         self.assertJsonEqual(r, {
@@ -208,7 +210,8 @@ class PonyTests(TestCase):
         
         # newuser2 shouldn't have been created
         self.assertRaises(User.DoesNotExist, User.objects.get, username='newuser2')
-    
+
+class BuildListTests(PonyTests):
     def test_get_package_build_list(self):
         r = self.api_client.get('/pony/builds')
         self.assertJsonEqual(r, {
@@ -264,12 +267,14 @@ class PonyTests(TestCase):
                  u'rel': u'self'},
             ]
         })
-        
+
+class LatestBuildTests(PonyTests):
     def test_get_latest_build(self):
         r = self.api_client.get('/pony/builds/latest')
         self.assertEqual(r.status_code, 302)
         self.assertEqual(r['Location'], 'http://testserver/pony/builds/1')
-        
+
+class TagListTests(PonyTests):
     def test_get_tag_list(self):
         r = self.api_client.get('/pony/tags')
         self.assertJsonEqual(r, {
@@ -289,7 +294,8 @@ class PonyTests(TestCase):
                  u'rel': u'tag'}
             ]
         })
-        
+
+class TagDetailTests(PonyTests):
     def test_get_tag_detail(self):
         r = self.api_client.get('/pony/tags/django')
         self.assertJsonEqual(r, {
@@ -341,6 +347,7 @@ class PonyTests(TestCase):
             ]
         })
         
+class LatestTagsTests(PonyTests):
     def test_get_latest_tagged_build(self):
         r = self.api_client.get('/pony/tags/django/latest')
         self.assertEqual(r.status_code, 302)
