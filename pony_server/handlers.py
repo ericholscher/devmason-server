@@ -57,8 +57,8 @@ class ProjectHandler(BaseHandler):
             user.set_password(password)
             new_user = True
                     
-        # If we didn't create a user make sure the password matches
-        if not new_user and not user.check_password(password):
+        # Make sure the password's correct.
+        if not user.check_password(password):
             return HttpResponseForbidden()
             
         # If there's an existing project, the updating user has to match the
@@ -76,7 +76,7 @@ class ProjectHandler(BaseHandler):
         # Okay, so if we fall through to here then we're trying to update an
         # existing project. This means checking that the user's allowed to
         # do so before updating it.
-        if new_user or project.owner != user or not user.check_password(password):
+        if new_user or project.owner != user:
             return HttpResponseForbidden()
             
         # Hey, look, we get to update this project.
