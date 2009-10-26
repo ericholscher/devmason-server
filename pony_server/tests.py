@@ -43,7 +43,7 @@ class PonyTests(TestCase):
                 u'name': u'pony',
                 u'owner': u'',
                 u'links': [
-                    {u'allowed_methods': [u'GET', u'PUT'],
+                    {u'allowed_methods': [u'GET', u'PUT', 'DELETE'],
                      u'href': u'/pony', 
                      u'rel': u'self'},
                     {u'allowed_methods': [u'GET'],
@@ -67,7 +67,7 @@ class PonyTests(TestCase):
             u'name': 'pony',
             u'owner': u'',
             u'links': [
-                {u'allowed_methods': [u'GET', u'PUT'], 
+                {u'allowed_methods': [u'GET', u'PUT', 'DELETE'], 
                  u'href': u'/pony', 
                  u'rel': u'self'},
                 {u'allowed_methods': [u'GET'], 
@@ -98,7 +98,7 @@ class PonyTests(TestCase):
             u'name': u'My Project',
             u'owner': u'testclient',
             u'links': [
-                {u'allowed_methods': [u'GET', u'PUT'],
+                {u'allowed_methods': [u'GET', u'PUT', 'DELETE'],
                  u'href': u'/proj', 
                  u'rel': u'self'},
                 {u'allowed_methods': [u'GET'],
@@ -136,7 +136,7 @@ class PonyTests(TestCase):
             u'name': u'Renamed',
             u'owner': u'newuser',
             u'links': [
-                {u'allowed_methods': [u'GET', u'PUT'],
+                {u'allowed_methods': [u'GET', u'PUT', 'DELETE'],
                  u'href': u'/proj', 
                  u'rel': u'self'},
                 {u'allowed_methods': [u'GET'], 
@@ -155,7 +155,48 @@ class PonyTests(TestCase):
                                 content_type="application/json",
                                 HTTP_AUTHORIZATION=auth)
         self.assertEqual(r.status_code, 403) # 403 forbidden
+    
+    def test_delete_package_succeeds_when_user_matches(self):
+        # Create a package...
+        auth = "Basic %s" % "newuser:password".encode("base64").strip()
+        r = self.api_client.put('/proj', data='{"name": "My Project"}', 
+                                content_type="application/json",
+                                HTTP_AUTHORIZATION=auth)
+        self.assertEqual(r.status_code, 201) # 201 created
         
+        # ... and delete it
+        r = self.api_client.delete('/proj', HTTP_AUTHORIZATION=auth)
+        self.assertEqual(r.status_code, 204) # 204 no content
+        
+    def test_delete_package_fails_when_different_user(self):
+        # Create a package...
+        auth = "Basic %s" % "newuser:password".encode("base64").strip()
+        r = self.api_client.put('/proj', data='{"name": "My Project"}', 
+                                content_type="application/json",
+                                HTTP_AUTHORIZATION=auth)
+        self.assertEqual(r.status_code, 201) # 201 created
+        
+        # ... and delete it with different auth
+        auth = "Basic %s" % "testclient:password".encode("base64").strip()
+        r = self.api_client.delete('/proj', HTTP_AUTHORIZATION=auth)
+        self.assertEqual(r.status_code, 403) # 403 forbidden
+    
+    def test_delete_package_should_not_create_users(self):
+        # Create a package...
+        auth = "Basic %s" % "newuser:password".encode("base64").strip()
+        r = self.api_client.put('/proj', data='{"name": "My Project"}', 
+                                content_type="application/json",
+                                HTTP_AUTHORIZATION=auth)
+        self.assertEqual(r.status_code, 201) # 201 created
+        
+        # ... and delete it with a new user
+        auth = "Basic %s" % "newuwer2:password".encode("base64").strip()
+        r = self.api_client.delete('/proj', HTTP_AUTHORIZATION=auth)
+        self.assertEqual(r.status_code, 403) # 403 forbidden
+        
+        # newuser2 shouldn't have been created
+        self.assertRaises(User.DoesNotExist, User.objects.get, username='newuser2')
+    
     def test_get_package_build_list(self):
         r = self.api_client.get('/pony/builds')
         self.assertJsonEqual(r, {
@@ -188,7 +229,7 @@ class PonyTests(TestCase):
                     {u'allowed_methods': [u'GET'], 
                      u'href': u'/pony/builds/1', 
                      u'rel': u'self'},
-                    {u'allowed_methods': [u'GET', u'PUT'],
+                    {u'allowed_methods': [u'GET', u'PUT', 'DELETE'],
                      u'href': u'/pony',
                      u'rel': u'project'},
                     {u'allowed_methods': [u'GET'], 
@@ -200,7 +241,7 @@ class PonyTests(TestCase):
                 ]   
             }],
             u'links': [
-                {u'allowed_methods': [u'GET', u'PUT'],
+                {u'allowed_methods': [u'GET', u'PUT', 'DELETE'],
                  u'href': u'/pony',
                  u'rel': u'project'},
                 {u'allowed_methods': [u'GET'],
@@ -225,7 +266,7 @@ class PonyTests(TestCase):
                 {u'allowed_methods': [u'GET'], 
                  u'href': u'/pony/tags', 
                  u'rel': u'self'},
-                {u'allowed_methods': [u'GET', u'PUT'],
+                {u'allowed_methods': [u'GET', u'PUT', 'DELETE'],
                  u'href': u'/pony',
                  u'rel': u'project'},
                 {u'allowed_methods': [u'GET'], 
@@ -270,7 +311,7 @@ class PonyTests(TestCase):
                     {u'allowed_methods': [u'GET'], 
                      u'href': u'/pony/builds/1', 
                      u'rel': u'self'},
-                    {u'allowed_methods': [u'GET', u'PUT'],
+                    {u'allowed_methods': [u'GET', u'PUT', 'DELETE'],
                      u'href': u'/pony',
                      u'rel': u'project'},
                     {u'allowed_methods': [u'GET'], 

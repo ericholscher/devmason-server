@@ -1,4 +1,3 @@
-from django.contrib.auth.models import User
 from django.core.paginator import Paginator, InvalidPage
 from django.core import urlresolvers
 from django.http import Http404, HttpResponseForbidden, HttpResponseBadRequest
@@ -7,7 +6,8 @@ from piston.handler import BaseHandler
 from piston.utils import require_mime
 from tagging.models import Tag
 from .models import Project, Build, BuildStep
-from .utils import link, allow_404, format_dt, HttpResponseUnauthorized, HttpResponseCreated
+from .utils import (link, allow_404, authenticated, format_dt,
+                    HttpResponseCreated, HttpResponseNoContent)
 
 class ProjectListHandler(BaseHandler):
     allowed_methods = ['GET']
@@ -20,7 +20,7 @@ class ProjectListHandler(BaseHandler):
         }
 
 class ProjectHandler(BaseHandler):
-    allowed_methods = ['GET', 'PUT']
+    allowed_methods = ['GET', 'PUT', 'DELETE']
     model = Project
     viewname = 'project_detail'
     fields = ('name', 'owner', 'links')
@@ -29,6 +29,7 @@ class ProjectHandler(BaseHandler):
     def read(self, request, slug):
         return get_object_or_404(Project, slug=slug)
     
+    @authenticated
     @require_mime('json')
     def update(self, request, slug):
         # Check the one required field in the PUT data -- a name
@@ -36,31 +37,7 @@ class ProjectHandler(BaseHandler):
             project_name = request.data['name']
         except (TypeError, KeyError):
             return HttpResponseBadRequest()
-                    
-        # PUT isn't allowed if we're not authenticated
-        if 'HTTP_AUTHORIZATION' not in request.META:
-            return HttpResponseUnauthorized()
-                
-        # Get or create a user from the Authorization header.
-        try:
-            authtype, auth = request.META['HTTP_AUTHORIZATION'].split(' ')
-            if authtype.lower() != 'basic':
-                return HttpResponseUnauthorized()
-            username, password = auth.decode('base64').split(':')
-            user = User.objects.get(username=username)
-            new_user = False
-        except ValueError:
-            # Raised if split()/unpack fails
-            return HttpResponseUnauthorized()
-        except User.DoesNotExist:
-            user = User(username=username)
-            user.set_password(password)
-            new_user = True
-                    
-        # Make sure the password's correct.
-        if not user.check_password(password):
-            return HttpResponseForbidden()
-            
+        
         # If there's an existing project, the updating user has to match the
         # user who created the project
         try:
@@ -68,15 +45,15 @@ class ProjectHandler(BaseHandler):
         except Project.DoesNotExist:
             # The project doesn't exist, so save the user if it's a
             # new one, create the project, then return 201 created
-            if new_user:
-                user.save()
-            project = Project.objects.create(name=project_name, slug=slug, owner=user)
+            if request.user.is_new_user:
+                request.user.save()
+            project = Project.objects.create(name=project_name, slug=slug, owner=request.user)
             return HttpResponseCreated(urlresolvers.reverse(self.viewname, args=[slug]))
                 
         # Okay, so if we fall through to here then we're trying to update an
         # existing project. This means checking that the user's allowed to
         # do so before updating it.
-        if new_user or project.owner != user:
+        if request.user.is_new_user or project.owner != request.user:
             return HttpResponseForbidden()
             
         # Hey, look, we get to update this project.
@@ -85,6 +62,19 @@ class ProjectHandler(BaseHandler):
         
         # PUT returns the newly updated representation
         return self.read(request, slug)
+    
+    @allow_404
+    @authenticated
+    def delete(self, request, slug):
+        project = get_object_or_404(Project, slug=slug)
+        
+        # New users don't get to delete packages; neither do non-owners
+        if request.user.is_new_user or project.owner != request.user:
+            return HttpResponseForbidden()
+            
+        # Otherwise delete it.
+        project.delete()
+        return HttpResponseNoContent()
             
     @classmethod
     def owner(cls, project):

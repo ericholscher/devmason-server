@@ -2,14 +2,17 @@
 Piston API helpers.
 """
 
+import functools
 import mimeparse
 import piston.resource
 import piston.emitters
 import piston.handler
 import piston.utils
+from django.contrib.auth.models import User
 from django.core import urlresolvers
-from django.http import Http404, HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response, get_object_or_404
+from django.http import (Http404, HttpResponse, HttpResponseRedirect,
+                         HttpResponseForbidden)
+from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils import dateformat
 from django.utils.http import urlencode
@@ -56,6 +59,9 @@ class HttpResponseUnauthorized(HttpResponse):
 
 class HttpResponseCreated(HttpResponseRedirect):
     status_code = 201
+    
+class HttpResponseNoContent(HttpResponse):
+    status_code = 204
 
 def link(rel, to_handler, *args, **getargs):
     """
@@ -84,6 +90,48 @@ def allow_404(func):
         except Http404: 
             return piston.utils.rc.NOT_FOUND 
     return wrapper
+    
+def authenticated(callback):
+    """
+    Decorate a view method as authenticated.
+    
+    Pony server has somewhat "interesting" authentication: new users are
+    created transparently when creating new resources, so this needs to keep
+    track of whether a user is "new" or not so that the handler may optionally
+    save the user if needed. Thus, this annotates `request.user` with the user
+    (new or not), and sets a `is_new_user` attribute on this user.
+    """
+    @functools.wraps(callback)
+    def _pony_auth(self, request, *args, **kwargs):
+        # PUT isn't allowed if we're not authenticated
+        if 'HTTP_AUTHORIZATION' not in request.META:
+            return HttpResponseUnauthorized()
+                
+        # Get or create a user from the Authorization header.
+        try:
+            authtype, auth = request.META['HTTP_AUTHORIZATION'].split(' ')
+            if authtype.lower() != 'basic':
+                return HttpResponseUnauthorized()
+            username, password = auth.decode('base64').split(':')
+            user = User.objects.get(username=username)
+            new_user = False
+        except ValueError:
+            # Raised if split()/unpack fails
+            return HttpResponseUnauthorized()
+        except User.DoesNotExist:
+            user = User(username=username)
+            user.set_password(password)
+            new_user = True
+                    
+        # Make sure the password's correct.
+        if not user.check_password(password):
+            return HttpResponseForbidden()
+            
+        request.user = user
+        request.user.is_new_user = new_user
+        
+        return callback(self, request, *args, **kwargs)
+    return _pony_auth
 
 def format_dt(dt):
     return dateformat.format(dt, 'r')
