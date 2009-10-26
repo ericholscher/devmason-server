@@ -20,7 +20,7 @@ class ProjectHandler(BaseHandler):
     allowed_methods = ['GET']
     model = Project
     viewname = 'project_detail'
-    fields = ('name', 'slug', 'owner', 'links')
+    fields = ('name', 'owner', 'links')
     
     @allow_404
     def read(self, request, slug):

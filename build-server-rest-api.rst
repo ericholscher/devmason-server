@@ -304,7 +304,6 @@ Representation:
 
     {
       'name': 'Project Name',
-      'slug': 'project-slug',
       'owner': 'username',      # the user who created the project, if applicable.
       
       'links': [{Link_}, ...]

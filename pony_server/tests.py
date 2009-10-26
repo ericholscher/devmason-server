@@ -35,13 +35,12 @@ class PonyTests(TestCase):
             msg = ('\n' + '\n'.join(diff))
             self.fail(msg)
 
-    def test_package_list(self):
+    def test_get_package_list(self):
         r = self.api_client.get('/')
         self.assertJsonEqual(r, {
             u'projects': [{
                 u'name': u'pony',
                 u'owner': u'',
-                u'slug': u'pony',
                 u'links': [
                     {u'allowed_methods': [u'GET'], 
                      u'href': u'/pony', 
@@ -61,12 +60,11 @@ class PonyTests(TestCase):
             }]
         })
         
-    def test_package_detail(self):
+    def test_get_package_detail(self):
         r = self.api_client.get('/pony')
         self.assertJsonEqual(r, {
             u'name': 'pony',
             u'owner': u'',
-            u'slug': 'pony',
             u'links': [
                 {u'allowed_methods': [u'GET'], 
                  u'href': u'/pony', 
@@ -136,12 +134,12 @@ class PonyTests(TestCase):
             ]
         })
         
-    def test_latest_build(self):
+    def test_get_latest_build(self):
         r = self.api_client.get('/pony/builds/latest')
         self.assertEqual(r.status_code, 302)
         self.assertEqual(r['Location'], 'http://testserver/pony/builds/1')
         
-    def test_tag_list(self):
+    def test_get_tag_list(self):
         r = self.api_client.get('/pony/tags')
         self.assertJsonEqual(r, {
             u'tags': [u'django', u'python'],
@@ -161,7 +159,7 @@ class PonyTests(TestCase):
             ]
         })
         
-    def test_tag_detail(self):
+    def test_get_tag_detail(self):
         r = self.api_client.get('/pony/tags/django')
         self.assertJsonEqual(r, {
             u'count': 1,
@@ -212,11 +210,11 @@ class PonyTests(TestCase):
             ]
         })
         
-    def test_latest_tagged_build(self):
+    def test_get_latest_tagged_build(self):
         r = self.api_client.get('/pony/tags/django/latest')
         self.assertEqual(r.status_code, 302)
         self.assertEqual(r['Location'], 'http://testserver/pony/builds/1')
     
-    def test_latest_tagged_build_404(self):
+    def test_get_latest_tagged_build_404s_with_invalid_tags(self):
         r = self.api_client.get('/pony/tags/nope/latest')
         self.assertEqual(r.status_code, 404)
