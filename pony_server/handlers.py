@@ -1,10 +1,13 @@
+from django.contrib.auth.models import User
 from django.core.paginator import Paginator, InvalidPage
-from django.http import Http404
+from django.core import urlresolvers
+from django.http import Http404, HttpResponseForbidden, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect
 from piston.handler import BaseHandler
+from piston.utils import require_mime
 from tagging.models import Tag
 from .models import Project, Build, BuildStep
-from .utils import link, allow_404, format_dt
+from .utils import link, allow_404, format_dt, HttpResponseUnauthorized, HttpResponseCreated
 
 class ProjectListHandler(BaseHandler):
     allowed_methods = ['GET']
@@ -17,7 +20,7 @@ class ProjectListHandler(BaseHandler):
         }
 
 class ProjectHandler(BaseHandler):
-    allowed_methods = ['GET']
+    allowed_methods = ['GET', 'PUT']
     model = Project
     viewname = 'project_detail'
     fields = ('name', 'owner', 'links')
@@ -26,6 +29,63 @@ class ProjectHandler(BaseHandler):
     def read(self, request, slug):
         return get_object_or_404(Project, slug=slug)
     
+    @require_mime('json')
+    def update(self, request, slug):
+        # Check the one required field in the PUT data -- a name
+        try:
+            project_name = request.data['name']
+        except (TypeError, KeyError):
+            return HttpResponseBadRequest()
+                    
+        # PUT isn't allowed if we're not authenticated
+        if 'HTTP_AUTHORIZATION' not in request.META:
+            return HttpResponseUnauthorized()
+                
+        # Get or create a user from the Authorization header.
+        try:
+            authtype, auth = request.META['HTTP_AUTHORIZATION'].split(' ')
+            if authtype.lower() != 'basic':
+                return HttpResponseUnauthorized()
+            username, password = auth.decode('base64').split(':')
+            user = User.objects.get(username=username)
+            new_user = False
+        except ValueError:
+            # Raised if split()/unpack fails
+            return HttpResponseUnauthorized()
+        except User.DoesNotExist:
+            user = User(username=username)
+            user.set_password(password)
+            new_user = True
+                    
+        # If we didn't create a user make sure the password matches
+        if not new_user and not user.check_password(password):
+            return HttpResponseForbidden()
+            
+        # If there's an existing project, the updating user has to match the
+        # user who created the project
+        try:
+            project = Project.objects.get(slug=slug)
+        except Project.DoesNotExist:
+            # The project doesn't exist, so save the user if it's a
+            # new one, create the project, then return 201 created
+            if new_user:
+                user.save()
+            project = Project.objects.create(name=project_name, slug=slug, owner=user)
+            return HttpResponseCreated(urlresolvers.reverse(self.viewname, args=[slug]))
+                
+        # Okay, so if we fall through to here then we're trying to update an
+        # existing project. This means checking that the user's allowed to
+        # do so before updating it.
+        if new_user or project.owner != user or not user.check_password(password):
+            return HttpResponseForbidden()
+            
+        # Hey, look, we get to update this project.
+        project.name = project_name
+        project.save()
+        
+        # PUT returns the newly updated representation
+        return self.read(request, slug)
+            
     @classmethod
     def owner(cls, project):
         if project.owner:

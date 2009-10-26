@@ -8,7 +8,7 @@ import piston.emitters
 import piston.handler
 import piston.utils
 from django.core import urlresolvers
-from django.http import Http404
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import dateformat
@@ -46,6 +46,16 @@ class HTMLTemplateEmitter(piston.emitters.Emitter):
         )
 
 piston.emitters.Emitter.register(HTMLTemplateEmitter, 'html', 'text/html')
+
+class HttpResponseUnauthorized(HttpResponse):
+    status_code = 401
+    
+    def __init__(self):
+        HttpResponse.__init__(self)
+        self['WWW-Authenticate'] = 'Basic realm="pony"'
+
+class HttpResponseCreated(HttpResponseRedirect):
+    status_code = 201
 
 def link(rel, to_handler, *args, **getargs):
     """

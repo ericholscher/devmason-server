@@ -1,12 +1,13 @@
 import pprint
 import difflib
+from django.contrib.auth.models import User
 from django.test import TestCase, Client
 from django.utils import simplejson
 from .models import Build
 
 class PonyTests(TestCase):
     urls = 'pony_server.urls'
-    fixtures = ['pony_server_test_data']
+    fixtures = ['authtestdata', 'pony_server_test_data']
     
     def setUp(self):
         # Make a couple of clients with default Accept: headers to trigger the
@@ -42,7 +43,7 @@ class PonyTests(TestCase):
                 u'name': u'pony',
                 u'owner': u'',
                 u'links': [
-                    {u'allowed_methods': [u'GET'], 
+                    {u'allowed_methods': [u'GET', u'PUT'],
                      u'href': u'/pony', 
                      u'rel': u'self'},
                     {u'allowed_methods': [u'GET'],
@@ -66,7 +67,7 @@ class PonyTests(TestCase):
             u'name': 'pony',
             u'owner': u'',
             u'links': [
-                {u'allowed_methods': [u'GET'], 
+                {u'allowed_methods': [u'GET', u'PUT'], 
                  u'href': u'/pony', 
                  u'rel': u'self'},
                 {u'allowed_methods': [u'GET'], 
@@ -78,7 +79,84 @@ class PonyTests(TestCase):
             ]
         })
         
-    def test_package_build_list(self):
+    def test_create_new_package_fails_when_not_authenticated(self):
+        r = self.api_client.put('/proj', data='{"name": "myproject"}', 
+                                content_type="application/json")
+        self.assertEqual(r.status_code, 401) # 401 unauthorized
+        self.assertEqual(r['WWW-Authenticate'], 'Basic realm="pony"')
+    
+    def test_create_new_package_works_with_existing_user(self):
+        auth = "Basic %s" % "testclient:password".encode("base64").strip()
+        r = self.api_client.put('/proj', data='{"name": "My Project"}', 
+                                content_type="application/json",
+                                HTTP_AUTHORIZATION=auth)
+        self.assertEqual(r.status_code, 201, r.content) # 201 created
+        self.assertEqual(r['Location'], 'http://testserver/proj')
+        
+        r = self.api_client.get('/proj')
+        self.assertJsonEqual(r, {
+            u'name': u'My Project',
+            u'owner': u'testclient',
+            u'links': [
+                {u'allowed_methods': [u'GET', u'PUT'],
+                 u'href': u'/proj', 
+                 u'rel': u'self'},
+                {u'allowed_methods': [u'GET'],
+                 u'href': u'/proj/builds', 
+                 u'rel': u'build-list'},
+                {u'allowed_methods': [u'GET'],
+                 u'href': u'/proj/builds/latest',
+                 u'rel': u'latest-build'}
+            ]
+        })
+        
+    def test_create_new_package_creates_users_automatically(self):
+        auth = "Basic %s" % "newuser:password".encode("base64").strip()
+        r = self.api_client.put('/proj', data='{"name": "My Project"}', 
+                                content_type="application/json",
+                                HTTP_AUTHORIZATION=auth)
+        self.assertEqual(r.status_code, 201, r.content) # 201 created
+        self.assertEqual(r['Location'], 'http://testserver/proj')
+        
+        # Check that the user got created
+        u = User.objects.get(username='testclient')
+        self.assertEqual(u.check_password('password'), True)
+        
+    def test_update_package_succeeds_when_same_user(self):
+        auth = "Basic %s" % "newuser:password".encode("base64").strip()
+        r = self.api_client.put('/proj', data='{"name": "My Project"}', 
+                                content_type="application/json",
+                                HTTP_AUTHORIZATION=auth)
+        self.assertEqual(r.status_code, 201) # 201 created
+        
+        r = self.api_client.put('/proj', data='{"name": "Renamed"}',
+                                content_type="application/json",
+                                HTTP_AUTHORIZATION=auth)
+        self.assertJsonEqual(r, {
+            u'name': u'Renamed',
+            u'owner': u'newuser',
+            u'links': [
+                {u'allowed_methods': [u'GET', u'PUT'],
+                 u'href': u'/proj', 
+                 u'rel': u'self'},
+                {u'allowed_methods': [u'GET'], 
+                 u'href': u'/proj/builds', 
+                 u'rel': u'build-list'},
+                {u'allowed_methods': [u'GET'],
+                 u'href': u'/proj/builds/latest',
+                 u'rel': u'latest-build'}
+            ]
+        })
+        
+    def test_update_package_fails_when_different_user(self):
+        # the pony project was created with no auth, so this'll always fail
+        auth = "Basic %s" % "newuser:password".encode("base64").strip()
+        r = self.api_client.put('/pony', data='{"name": "My Project"}', 
+                                content_type="application/json",
+                                HTTP_AUTHORIZATION=auth)
+        self.assertEqual(r.status_code, 403) # 403 forbidden
+        
+    def test_get_package_build_list(self):
         r = self.api_client.get('/pony/builds')
         self.assertJsonEqual(r, {
             u'count': 1,
@@ -110,7 +188,7 @@ class PonyTests(TestCase):
                     {u'allowed_methods': [u'GET'], 
                      u'href': u'/pony/builds/1', 
                      u'rel': u'self'},
-                    {u'allowed_methods': [u'GET'],
+                    {u'allowed_methods': [u'GET', u'PUT'],
                      u'href': u'/pony',
                      u'rel': u'project'},
                     {u'allowed_methods': [u'GET'], 
@@ -122,7 +200,7 @@ class PonyTests(TestCase):
                 ]   
             }],
             u'links': [
-                {u'allowed_methods': [u'GET'],
+                {u'allowed_methods': [u'GET', u'PUT'],
                  u'href': u'/pony',
                  u'rel': u'project'},
                 {u'allowed_methods': [u'GET'],
@@ -147,7 +225,7 @@ class PonyTests(TestCase):
                 {u'allowed_methods': [u'GET'], 
                  u'href': u'/pony/tags', 
                  u'rel': u'self'},
-                {u'allowed_methods': [u'GET'],
+                {u'allowed_methods': [u'GET', u'PUT'],
                  u'href': u'/pony',
                  u'rel': u'project'},
                 {u'allowed_methods': [u'GET'], 
@@ -192,7 +270,7 @@ class PonyTests(TestCase):
                     {u'allowed_methods': [u'GET'], 
                      u'href': u'/pony/builds/1', 
                      u'rel': u'self'},
-                    {u'allowed_methods': [u'GET'],
+                    {u'allowed_methods': [u'GET', u'PUT'],
                      u'href': u'/pony',
                      u'rel': u'project'},
                     {u'allowed_methods': [u'GET'], 
