@@ -89,7 +89,7 @@ class ProjectHandler(BaseHandler):
             link('self', ProjectHandler, project.slug),
             link('build-list', ProjectBuildListHandler, project.slug),
             link('latest-build', LatestBuildHandler, project.slug),
-            # link('tag-list', ProjectTagListHandler, project.slug),
+            link('tag-list', ProjectTagListHandler, project.slug),
         ]
 
 class PaginatedBuildHandler(BaseHandler):

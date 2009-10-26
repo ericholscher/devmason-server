@@ -43,7 +43,7 @@ class PonyTests(TestCase):
                 u'name': u'pony',
                 u'owner': u'',
                 u'links': [
-                    {u'allowed_methods': [u'GET', u'PUT', 'DELETE'],
+                    {u'allowed_methods': [u'GET', u'PUT', u'DELETE'],
                      u'href': u'/pony', 
                      u'rel': u'self'},
                     {u'allowed_methods': [u'GET'],
@@ -51,7 +51,10 @@ class PonyTests(TestCase):
                      u'rel': u'build-list'},
                     {u'allowed_methods': [u'GET'],
                      u'href': u'/pony/builds/latest',
-                     u'rel': u'latest-build'}
+                     u'rel': u'latest-build'},
+                    {u'allowed_methods': [u'GET'],
+                     u'href': u'/pony/tags',
+                     u'rel': u'tag-list'},
                 ]
             }],
             u'links': [{
@@ -64,10 +67,10 @@ class PonyTests(TestCase):
     def test_get_package_detail(self):
         r = self.api_client.get('/pony')
         self.assertJsonEqual(r, {
-            u'name': 'pony',
+            u'name': u'pony',
             u'owner': u'',
             u'links': [
-                {u'allowed_methods': [u'GET', u'PUT', 'DELETE'], 
+                {u'allowed_methods': [u'GET', u'PUT', u'DELETE'], 
                  u'href': u'/pony', 
                  u'rel': u'self'},
                 {u'allowed_methods': [u'GET'], 
@@ -75,7 +78,10 @@ class PonyTests(TestCase):
                  u'rel': u'build-list'},
                 {u'allowed_methods': [u'GET'],
                  u'href': u'/pony/builds/latest',
-                 u'rel': u'latest-build'}
+                 u'rel': u'latest-build'},
+                {u'allowed_methods': [u'GET'],
+                 u'href': u'/pony/tags',
+                 u'rel': u'tag-list'},
             ]
         })
         
@@ -98,7 +104,7 @@ class PonyTests(TestCase):
             u'name': u'My Project',
             u'owner': u'testclient',
             u'links': [
-                {u'allowed_methods': [u'GET', u'PUT', 'DELETE'],
+                {u'allowed_methods': [u'GET', u'PUT', u'DELETE'],
                  u'href': u'/proj', 
                  u'rel': u'self'},
                 {u'allowed_methods': [u'GET'],
@@ -106,7 +112,10 @@ class PonyTests(TestCase):
                  u'rel': u'build-list'},
                 {u'allowed_methods': [u'GET'],
                  u'href': u'/proj/builds/latest',
-                 u'rel': u'latest-build'}
+                 u'rel': u'latest-build'},
+                {u'allowed_methods': [u'GET'],
+                 u'href': u'/proj/tags',
+                 u'rel': u'tag-list'},
             ]
         })
         
@@ -136,7 +145,7 @@ class PonyTests(TestCase):
             u'name': u'Renamed',
             u'owner': u'newuser',
             u'links': [
-                {u'allowed_methods': [u'GET', u'PUT', 'DELETE'],
+                {u'allowed_methods': [u'GET', u'PUT', u'DELETE'],
                  u'href': u'/proj', 
                  u'rel': u'self'},
                 {u'allowed_methods': [u'GET'], 
@@ -144,7 +153,10 @@ class PonyTests(TestCase):
                  u'rel': u'build-list'},
                 {u'allowed_methods': [u'GET'],
                  u'href': u'/proj/builds/latest',
-                 u'rel': u'latest-build'}
+                 u'rel': u'latest-build'},
+                {u'allowed_methods': [u'GET'],
+                 u'href': u'/proj/tags',
+                 u'rel': u'tag-list'},
             ]
         })
         
@@ -229,7 +241,7 @@ class PonyTests(TestCase):
                     {u'allowed_methods': [u'GET'], 
                      u'href': u'/pony/builds/1', 
                      u'rel': u'self'},
-                    {u'allowed_methods': [u'GET', u'PUT', 'DELETE'],
+                    {u'allowed_methods': [u'GET', u'PUT', u'DELETE'],
                      u'href': u'/pony',
                      u'rel': u'project'},
                     {u'allowed_methods': [u'GET'], 
@@ -241,7 +253,7 @@ class PonyTests(TestCase):
                 ]   
             }],
             u'links': [
-                {u'allowed_methods': [u'GET', u'PUT', 'DELETE'],
+                {u'allowed_methods': [u'GET', u'PUT', u'DELETE'],
                  u'href': u'/pony',
                  u'rel': u'project'},
                 {u'allowed_methods': [u'GET'],
@@ -266,7 +278,7 @@ class PonyTests(TestCase):
                 {u'allowed_methods': [u'GET'], 
                  u'href': u'/pony/tags', 
                  u'rel': u'self'},
-                {u'allowed_methods': [u'GET', u'PUT', 'DELETE'],
+                {u'allowed_methods': [u'GET', u'PUT', u'DELETE'],
                  u'href': u'/pony',
                  u'rel': u'project'},
                 {u'allowed_methods': [u'GET'], 
@@ -311,7 +323,7 @@ class PonyTests(TestCase):
                     {u'allowed_methods': [u'GET'], 
                      u'href': u'/pony/builds/1', 
                      u'rel': u'self'},
-                    {u'allowed_methods': [u'GET', u'PUT', 'DELETE'],
+                    {u'allowed_methods': [u'GET', u'PUT', u'DELETE'],
                      u'href': u'/pony',
                      u'rel': u'project'},
                     {u'allowed_methods': [u'GET'], 
