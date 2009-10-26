@@ -6,8 +6,9 @@ from piston.handler import BaseHandler
 from piston.utils import require_mime
 from tagging.models import Tag
 from .models import Project, Build, BuildStep
-from .utils import (link, allow_404, authenticated, format_dt,
-                    HttpResponseCreated, HttpResponseNoContent)
+from .utils import (link, allow_404, authentication_required,
+                    authentication_optional, format_dt, HttpResponseCreated,
+                    HttpResponseNoContent)
 
 class ProjectListHandler(BaseHandler):
     allowed_methods = ['GET']
@@ -29,8 +30,8 @@ class ProjectHandler(BaseHandler):
     def read(self, request, slug):
         return get_object_or_404(Project, slug=slug)
     
-    @authenticated
     @require_mime('json')
+    @authentication_required
     def update(self, request, slug):
         # Check the one required field in the PUT data -- a name
         try:
@@ -64,7 +65,7 @@ class ProjectHandler(BaseHandler):
         return self.read(request, slug)
     
     @allow_404
-    @authenticated
+    @authentication_required
     def delete(self, request, slug):
         project = get_object_or_404(Project, slug=slug)
         

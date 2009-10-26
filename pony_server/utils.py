@@ -8,7 +8,7 @@ import piston.resource
 import piston.emitters
 import piston.handler
 import piston.utils
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, AnonymousUser
 from django.core import urlresolvers
 from django.http import (Http404, HttpResponse, HttpResponseRedirect,
                          HttpResponseForbidden)
@@ -90,10 +90,37 @@ def allow_404(func):
         except Http404: 
             return piston.utils.rc.NOT_FOUND 
     return wrapper
-    
-def authenticated(callback):
+
+def _get_user(request):
     """
-    Decorate a view method as authenticated.
+    Pull a user out of the `Authorization` header. Returns the user, an
+    `AnonymousUser` if there's no Authorization header, or `None` if there was
+    an invalid `Authorization` header.
+    """
+    if 'HTTP_AUTHORIZATION' not in request.META:
+        return AnonymousUser(), None
+    
+    # Get or create a user from the Authorization header.
+    try:
+        authtype, auth = request.META['HTTP_AUTHORIZATION'].split(' ')
+        if authtype.lower() != 'basic':
+            return None
+        username, password = auth.decode('base64').split(':')
+        user = User.objects.get(username=username)
+        user.is_new_user = False
+    except ValueError:
+        # Raised if split()/unpack fails
+        return None
+    except User.DoesNotExist:
+        user = User(username=username)
+        user.set_password(password)
+        user.is_new_user = True
+    
+    return user, password
+    
+def authentication_required(callback):
+    """
+    Require that a handler method be called with authentication.
     
     Pony server has somewhat "interesting" authentication: new users are
     created transparently when creating new resources, so this needs to keep
@@ -102,36 +129,33 @@ def authenticated(callback):
     (new or not), and sets a `is_new_user` attribute on this user.
     """
     @functools.wraps(callback)
-    def _pony_auth(self, request, *args, **kwargs):
-        # PUT isn't allowed if we're not authenticated
-        if 'HTTP_AUTHORIZATION' not in request.META:
+    def _view(self, request, *args, **kwargs):
+        user, password = _get_user(request)
+        if not user or user.is_anonymous():
             return HttpResponseUnauthorized()
-                
-        # Get or create a user from the Authorization header.
-        try:
-            authtype, auth = request.META['HTTP_AUTHORIZATION'].split(' ')
-            if authtype.lower() != 'basic':
-                return HttpResponseUnauthorized()
-            username, password = auth.decode('base64').split(':')
-            user = User.objects.get(username=username)
-            new_user = False
-        except ValueError:
-            # Raised if split()/unpack fails
-            return HttpResponseUnauthorized()
-        except User.DoesNotExist:
-            user = User(username=username)
-            user.set_password(password)
-            new_user = True
-                    
-        # Make sure the password's correct.
         if not user.check_password(password):
             return HttpResponseForbidden()
-            
         request.user = user
-        request.user.is_new_user = new_user
-        
         return callback(self, request, *args, **kwargs)
-    return _pony_auth
-
+    return _view
+    
+def authentication_optional(callback):
+    """
+    Optionally allow authentication for a view.
+    
+    Like `authentication_required`, except that if there's no auth info then
+    `request.user` will be `AnonymousUser`.
+    """
+    @functools.wraps(callback)
+    def _view(self, request, *args, **kwargs):
+        user, password = _get_user(request)
+        if not user:
+            return HttpResponseUnauthorized()
+        if user.is_authenticated() and not user.check_password(password):
+            return HttpResponseForbidden()
+        request.user = user
+        return callback(self, request, *args, **kwargs)
+    return _view
+            
 def format_dt(dt):
     return dateformat.format(dt, 'r')
