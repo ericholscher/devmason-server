@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.core.paginator import Paginator, InvalidPage
 from django.core import urlresolvers
 from django.http import Http404, HttpResponseForbidden, HttpResponseBadRequest
@@ -8,7 +9,11 @@ from tagging.models import Tag
 from .models import Project, Build, BuildStep
 from .utils import (link, allow_404, authentication_required,
                     authentication_optional, format_dt, HttpResponseCreated,
-                    HttpResponseNoContent)
+                    HttpResponseNoContent, mk_datetime)
+try:
+    import json
+except:
+    import simplejson as json
 
 class ProjectListHandler(BaseHandler):
     allowed_methods = ['GET']
@@ -131,11 +136,11 @@ class PaginatedBuildHandler(BaseHandler):
             'per_page': per_page,
         }
         return dict(response, **extra)
-        
+
 class ProjectBuildListHandler(PaginatedBuildHandler):
-    allowed_methods = ['GET']
+    allowed_methods = ['GET', 'POST']
     viewname = 'project_build_list'
-    
+
     @allow_404
     def read(self, request, slug):
         project = get_object_or_404(Project, slug=slug)
@@ -153,6 +158,38 @@ class ProjectBuildListHandler(PaginatedBuildHandler):
         response['links'] = links
         response['project'] = project
         return response
+
+    def create(self, request, slug):
+        project = get_object_or_404(Project, slug=slug)
+        obj = json.loads(request.POST['build'])
+        client = obj['client']
+        try:
+            user = User.objects.get(username=client['user'])
+        except:
+            user = None
+        build = Build.objects.create(
+            project=project,
+            success = obj['success'],
+            started = mk_datetime(obj['started']),
+            finished = mk_datetime(obj['finished']),
+            host = client['host'],
+            arch = client['arch'],
+            user = user,
+            extra_info = None,
+        )
+        for result in obj['results']:
+            BuildStep.objects.create(
+                build = build,
+                success = result['success'],
+                started = mk_datetime(result['started']),
+                finished = mk_datetime(result['finished']),
+                name = result['name'],
+                output = getattr(result, 'output', ''),
+                errout = result['errout'],
+                extra_info = None,
+            )
+
+
 
 class BuildHandler(BaseHandler):
     allowed_methods = ['GET']

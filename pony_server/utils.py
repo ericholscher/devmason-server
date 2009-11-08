@@ -2,6 +2,7 @@
 Piston API helpers.
 """
 
+import datetime
 import functools
 import mimeparse
 import piston.resource
@@ -164,6 +165,9 @@ def authentication_optional(callback):
         request.user = user
         return callback(self, request, *args, **kwargs)
     return _view
-            
+
 def format_dt(dt):
     return dateformat.format(dt, 'r')
+
+def mk_datetime(string):
+    return datetime.datetime.strptime(string, '%Y-%m-%dT%H:%M:%S')
