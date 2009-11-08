@@ -8,6 +8,7 @@ import piston.resource
 import piston.emitters
 import piston.handler
 import piston.utils
+from django.db import models
 from django.contrib.auth.models import User, AnonymousUser
 from django.core import urlresolvers
 from django.http import (Http404, HttpResponse, HttpResponseRedirect,
@@ -42,9 +43,16 @@ class HTMLTemplateEmitter(piston.emitters.Emitter):
     """Emit a resource using a good old fashioned template."""
     
     def render(self, request):
+        if isinstance(self.data, HttpResponse):
+            return self.data
+        if isinstance(self.data, models.Model):
+            context = {self.data._meta.object_name.lower(): self.data,
+                       'links': self.construct()['links']}
+        else:
+            context = self.data
         return render_to_response(
             'pony_server/%s.html' % self.handler.viewname.lower(),
-            self.data,
+            context,
             context_instance = RequestContext(request),
         )
 

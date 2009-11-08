@@ -28,7 +28,7 @@ class ProjectHandler(BaseHandler):
 
     @allow_404
     def read(self, request, slug):
-        return {'project': get_object_or_404(Project, slug=slug)}
+        return  get_object_or_404(Project, slug=slug)
 
     @require_mime('json')
     @authentication_required
@@ -151,6 +151,7 @@ class ProjectBuildListHandler(PaginatedBuildHandler):
         
         response = self.handle_paginated_builds(builds, request.GET, make_link)
         response['links'] = links
+        response['project'] = project
         return response
 
 class BuildHandler(BaseHandler):
@@ -162,7 +163,7 @@ class BuildHandler(BaseHandler):
 
     @allow_404
     def read(self, request, slug, build_id):
-        return {'build': get_object_or_404(Build, project__slug=slug, pk=build_id)}
+        return get_object_or_404(Build, project__slug=slug, pk=build_id)
 
     @classmethod
     def tags(cls, build):
@@ -183,9 +184,10 @@ class BuildHandler(BaseHandler):
             'user': build.user and build.user.username or '',
             'arch': build.arch,
         }
-        details.update(build.extra_info)
+        if build.extra_info != '""':
+            details.update(build.extra_info)
         return details
-    
+
     @classmethod
     def results(cls, build):
         rv = []
