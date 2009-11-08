@@ -8,7 +8,7 @@ Sweet Pony Build Results, yo!
 <h3 class="top_main_heading">Build information</h3>
    <p>
 <strong>{{ project }}</strong><Br>
-{% for build in project.builds.all %}
+{% for build in builds %}
     <a href="{{ build.get_absolute_url }}">{{ build }}</a><Br>
 {% endfor %}
 
