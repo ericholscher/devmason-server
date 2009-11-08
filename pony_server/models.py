@@ -7,7 +7,7 @@ class Project(models.Model):
     name = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
     owner = models.ForeignKey(User, related_name='projects', blank=True, null=True)
-    
+
     class Meta:
         ordering = ['name']
 
@@ -27,13 +27,13 @@ class Build(models.Model):
     arch = models.CharField(max_length=250)
     user = models.ForeignKey(User, blank=True, null=True, related_name='builds')
     extra_info = JSONField()
-    
+
     class Meta:
         ordering = ['-finished']
 
     def __unicode__(self):
         return u"Build %s for %s" % (self.pk, self.project)
-        
+
     @models.permalink
     def get_absolute_url(self):
         return ('build_detail', [self.project.slug, self.pk])
@@ -49,10 +49,35 @@ class BuildStep(models.Model):
     output = models.TextField(blank=True)
     errout = models.TextField(blank=True)
     extra_info = JSONField()
-    
+
     class Meta:
         ordering = ['build', 'started']
-        
+
     def __unicode__(self):
         return "%s: %s" % (self.build, self.name)
 
+
+VCS_TYPES = (
+    ('none', 'None'),
+    ('git', 'Git'),
+    ('svn', 'Subversion'),
+    ('hg', 'Mercurial'),
+    ('bzr', 'Bazaar'),
+)
+
+class Repository(models.Model):
+    """
+    Representation of a version control system repository.
+    """
+    project = models.ForeignKey(Project, related_name='repos')
+    url = models.CharField(max_length=500, unique=True)
+    type = models.CharField('Version Control Type', max_length=20,
+                                choices=VCS_TYPES, default=VCS_TYPES[0][0])
+
+    def __unicode__(self):
+        return self.url
+
+class BuildRequest(models.Model):
+    repository = models.ForeignKey(Repository, related_name='build_requests')
+    identifier = models.CharField(max_length=200)
+    requested = models.DateTimeField()
