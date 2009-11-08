@@ -18,7 +18,7 @@ except:
 class ProjectListHandler(BaseHandler):
     allowed_methods = ['GET']
     viewname = 'project_list'
-    
+
     def read(self, request):
         return {
             'projects': Project.objects.all(),
@@ -43,7 +43,7 @@ class ProjectHandler(BaseHandler):
             project_name = request.data['name']
         except (TypeError, KeyError):
             return HttpResponseBadRequest()
-        
+
         # If there's an existing project, the updating user has to match the
         # user who created the project
         try:
@@ -55,40 +55,40 @@ class ProjectHandler(BaseHandler):
                 request.user.save()
             project = Project.objects.create(name=project_name, slug=slug, owner=request.user)
             return HttpResponseCreated(urlresolvers.reverse(self.viewname, args=[slug]))
-                
+
         # Okay, so if we fall through to here then we're trying to update an
         # existing project. This means checking that the user's allowed to
         # do so before updating it.
         if request.user.is_new_user or project.owner != request.user:
             return HttpResponseForbidden()
-            
+
         # Hey, look, we get to update this project.
         project.name = project_name
         project.save()
-        
+
         # PUT returns the newly updated representation
         return self.read(request, slug)
-    
+
     @allow_404
     @authentication_required
     def delete(self, request, slug):
         project = get_object_or_404(Project, slug=slug)
-        
+
         # New users don't get to delete packages; neither do non-owners
         if request.user.is_new_user or project.owner != request.user:
             return HttpResponseForbidden()
-            
+
         # Otherwise delete it.
         project.delete()
         return HttpResponseNoContent()
-            
+
     @classmethod
     def owner(cls, project):
         if project.owner:
             return project.owner.username
         else:
             return ''
-            
+
     @classmethod
     def links(cls, project):
         return [
@@ -100,25 +100,25 @@ class ProjectHandler(BaseHandler):
 
 class PaginatedBuildHandler(BaseHandler):
     """Helper base class to provide paginated builds"""
-    
+
     def handle_paginated_builds(self, builds, qdict, link_callback, extra={}):
         try:
             per_page = int(qdict['per_page'])
         except (ValueError, KeyError):
             per_page = 25
-        
+
         paginator = Paginator(builds, per_page)
-        
+
         try:
             page = paginator.page(qdict['page'])
         except (KeyError, InvalidPage):
             page = paginator.page(1)
-        
+
         if not page.object_list:
             raise Http404("No builds")
-        
+
         link_callback('self', page=page.number, per_page=per_page)
-        
+
         if page.has_other_pages():
             link_callback('first', page=1, per_page=per_page)
             link_callback('last', page=paginator.num_pages, per_page=per_page)
@@ -126,7 +126,7 @@ class PaginatedBuildHandler(BaseHandler):
                 link_callback('previous', page=page.previous_page_number(), per_page=per_page)
             if page.has_next_page():
                 link_callback('next', page=page.next_page_number(), per_page=per_page)
-        
+
         response = {
             'builds': page.object_list,
             'count': paginator.count,
@@ -145,15 +145,15 @@ class ProjectBuildListHandler(PaginatedBuildHandler):
     def read(self, request, slug):
         project = get_object_or_404(Project, slug=slug)
         builds = project.builds.all()
-        
+
         links = [
             link('project', ProjectHandler, project.slug),
             link('latest-build', LatestBuildHandler, project.slug),
         ]
-        
+
         def make_link(rel, **kwargs):
             links.append(link(rel, self, project.slug, **kwargs))
-        
+
         response = self.handle_paginated_builds(builds, request.GET, make_link)
         response['links'] = links
         response['project'] = project
@@ -240,7 +240,7 @@ class BuildHandler(BaseHandler):
             step_data.update(step.extra_info)
             rv.append(step_data)
         return rv
-    
+
     @classmethod
     def links(cls, build):
         links = [
@@ -250,60 +250,60 @@ class BuildHandler(BaseHandler):
         for tag in build.tags:
             links.append(link('tag', TagHandler, build.project.slug, tag.name))
         return links
-        
+
 class LatestBuildHandler(BaseHandler):
     allowed_methods = ['GET']
     viewname = 'latest_build'
-    
+
     @allow_404
     def read(self, request, slug):
         project = get_object_or_404(Project, slug=slug)
         build = project.builds.latest('finished')
         return redirect('build_detail', slug, build.pk)
-        
+
 class ProjectTagListHandler(BaseHandler):
     allowed_methods = ['GET']
     viewname = 'project_tag_list'
-    
+
     @allow_404
     def read(self, request, slug):
         project = get_object_or_404(Project, slug=slug)
         tags = Tag.objects.usage_for_model(Build, filters={'project': project})
-        
+
         links = [
             link('self', ProjectTagListHandler, project.slug),
             link('project', ProjectHandler, project.slug),
         ]
         links.extend(link('tag', TagHandler, project.slug, tag.name) for tag in tags)
-        
+
         return {
             'tags': [tag.name for tag in tags],
             'links': links,
         }
-        
+
 class TagHandler(PaginatedBuildHandler):
     allowed_methods = ['GET']
     viewname = 'tag_detail'
     model = Tag
-    
+
     @allow_404
     def read(self, request, slug, tags):
         project = get_object_or_404(Project, slug=slug)
         tag_list = tags.split(';')
         builds = Build.tagged.with_all(tags, queryset=project.builds.all())
-        
+
         links = []
         def make_link(rel, **kwargs):
             links.append(link(rel, self, project.slug, tags, **kwargs))
-        
+
         response = self.handle_paginated_builds(builds, request.GET, make_link, {'tags': tag_list})
         response['links'] = links
         return response
-        
+
 class ProjectLatestTaggedBuildHandler(BaseHandler):
     allowed_methods = ['GET']
     viewname = 'latest_tagged_build'
-    
+
     @allow_404
     def read(self, request, slug, tags):
         project = get_object_or_404(Project, slug=slug)

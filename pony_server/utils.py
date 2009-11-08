@@ -21,28 +21,28 @@ from django.utils.http import urlencode
 
 class Resource(piston.resource.Resource):
     """Chooses an emitter based on mime types."""
-    
+
     def determine_emitter(self, request, *args, **kwargs):
         # First look for a format hardcoded into the URLconf
         em = kwargs.pop('emitter_format', None)
-        
+
         # Then look for ?format=json
         if not em:
             em = request.GET.get('format', None)
-            
+
         # Then try the accept header
         if not em and 'HTTP_ACCEPT' in request.META:
             mime = mimeparse.best_match(['application/json', 'text/html'],
                                         request.META['HTTP_ACCEPT'])
             if mime:
                 em = mime.split('/')[-1]
-                
+
         # Finally fall back on HTML
         return em or 'html'
-        
+
 class HTMLTemplateEmitter(piston.emitters.Emitter):
     """Emit a resource using a good old fashioned template."""
-    
+
     def render(self, request):
         if isinstance(self.data, HttpResponse):
             return self.data
@@ -61,14 +61,14 @@ piston.emitters.Emitter.register('html', HTMLTemplateEmitter, 'text/html')
 
 class HttpResponseUnauthorized(HttpResponse):
     status_code = 401
-    
+
     def __init__(self):
         HttpResponse.__init__(self)
         self['WWW-Authenticate'] = 'Basic realm="pony"'
 
 class HttpResponseCreated(HttpResponseRedirect):
     status_code = 201
-    
+
 class HttpResponseNoContent(HttpResponse):
     status_code = 204
 
@@ -108,7 +108,7 @@ def _get_user(request):
     """
     if 'HTTP_AUTHORIZATION' not in request.META:
         return AnonymousUser(), None
-    
+
     # Get or create a user from the Authorization header.
     try:
         authtype, auth = request.META['HTTP_AUTHORIZATION'].split(' ')
@@ -124,13 +124,13 @@ def _get_user(request):
         user = User(username=username)
         user.set_password(password)
         user.is_new_user = True
-    
+
     return user, password
-    
+
 def authentication_required(callback):
     """
     Require that a handler method be called with authentication.
-    
+
     Pony server has somewhat "interesting" authentication: new users are
     created transparently when creating new resources, so this needs to keep
     track of whether a user is "new" or not so that the handler may optionally
@@ -147,11 +147,11 @@ def authentication_required(callback):
         request.user = user
         return callback(self, request, *args, **kwargs)
     return _view
-    
+
 def authentication_optional(callback):
     """
     Optionally allow authentication for a view.
-    
+
     Like `authentication_required`, except that if there's no auth info then
     `request.user` will be `AnonymousUser`.
     """
