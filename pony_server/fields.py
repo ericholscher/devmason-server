@@ -4,7 +4,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import simplejson
 
 # JSONField is from Djblets
-# (http://code.google.com/p/reviewboard/wiki/Djblets), which is by 
+# (http://code.google.com/p/reviewboard/wiki/Djblets), which is by
 # Christian Hammond and David Trowbridge.
 class JSONField(models.TextField):
     """
@@ -44,7 +44,11 @@ class JSONField(models.TextField):
         value = self.value_from_object(instance)
 
         if value:
-            value = self.loads(value)
+            try:
+                value = self.loads(value)
+            except (ValueError, SyntaxError):
+                #Was getting "''", and breaking
+                pass
         else:
             value = {}
 
