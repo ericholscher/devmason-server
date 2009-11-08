@@ -25,6 +25,15 @@
 
  <div id="main">
   <div id="maincontent">
+{% block links %}
+<strong>Links</strong><Br>
+{% for link in links %}
+    <a href="{{ link.href }}">{{ link.rel }}</a> |
+{% endfor %}
+
+{% endblock links %}
+
+
 {% block content %}
 
 {% endblock %}
