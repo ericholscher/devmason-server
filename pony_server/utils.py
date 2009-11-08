@@ -43,12 +43,12 @@ class HTMLTemplateEmitter(piston.emitters.Emitter):
     
     def render(self, request):
         return render_to_response(
-            template = 'pony/%s.html' % self.handler.__name__.lower(),
-            context = self.data,
+            'pony_server/%s.html' % self.handler.viewname.lower(),
+            self.data,
             context_instance = RequestContext(request),
         )
 
-piston.emitters.Emitter.register(HTMLTemplateEmitter, 'html', 'text/html')
+piston.emitters.Emitter.register('html', HTMLTemplateEmitter, 'text/html')
 
 class HttpResponseUnauthorized(HttpResponse):
     status_code = 401
@@ -77,18 +77,18 @@ def link(rel, to_handler, *args, **getargs):
         'href': href,
         'allowed_methods': to_handler.allowed_methods
     }
-    
+
 # Needed now; will be fixed in Piston 0.2.3
-def allow_404(func): 
-    """ 
-    decorator that catches Http404 exceptions and safely returns 
-    piston style 404 responses (rc.NOT_FOUND). 
-    """ 
-    def wrapper(*args, **kwargs): 
-        try: 
-            return func(*args, **kwargs) 
-        except Http404: 
-            return piston.utils.rc.NOT_FOUND 
+def allow_404(func):
+    """
+    decorator that catches Http404 exceptions and safely returns
+    piston style 404 responses (rc.NOT_FOUND).
+    """
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Http404:
+            return piston.utils.rc.NOT_FOUND
     return wrapper
 
 def _get_user(request):

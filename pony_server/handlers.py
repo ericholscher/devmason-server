@@ -25,11 +25,11 @@ class ProjectHandler(BaseHandler):
     model = Project
     viewname = 'project_detail'
     fields = ('name', 'owner', 'links')
-    
+
     @allow_404
     def read(self, request, slug):
-        return get_object_or_404(Project, slug=slug)
-    
+        return {'project': get_object_or_404(Project, slug=slug)}
+
     @require_mime('json')
     @authentication_required
     def update(self, request, slug):
@@ -159,23 +159,23 @@ class BuildHandler(BaseHandler):
     fields = ('success', 'started', 'finished', 'tags',
               'client', 'results', 'links')
     viewname = 'build_detail'
-    
+
     @allow_404
     def read(self, request, slug, build_id):
-        return get_object_or_404(Build, project__slug=slug, pk=build_id)
-        
+        return {'build': get_object_or_404(Build, project__slug=slug, pk=build_id)}
+
     @classmethod
     def tags(cls, build):
         return [t.name for t in build.tags]
-        
+
     @classmethod
     def started(cls, build):
         return format_dt(build.started)
-    
+
     @classmethod
     def finished(cls, build):
         return format_dt(build.finished)
-            
+
     @classmethod
     def client(cls, build):
         details = {
