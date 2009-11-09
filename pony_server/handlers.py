@@ -213,9 +213,9 @@ class ProjectBuildListHandler(PaginatedBuildHandler):
                     started = mk_datetime(result['started']),
                     finished = mk_datetime(result['finished']),
                     name = result['name'],
-                    output = getattr(result, 'output', ''),
-                    errout = getattr(result, 'errout', ''),
-                    extra_info = extra,
+                    output = result.get('output', ''),
+                    errout = result.get('errout', ''),
+                    extra_info = simplejson.dumps(extra),
                 )
             except (KeyError, ValueError), ex:
                 # We'll get a KeyError from request.data[k] if the given key
