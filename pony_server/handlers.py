@@ -3,6 +3,7 @@ from django.core.paginator import Paginator, InvalidPage
 from django.core import urlresolvers
 from django.http import Http404, HttpResponseForbidden, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect
+from django.utils import simplejson
 from piston.handler import BaseHandler
 from piston.utils import require_mime
 from tagging.models import Tag
@@ -166,9 +167,9 @@ class ProjectBuildListHandler(PaginatedBuildHandler):
         project = get_object_or_404(Project, slug=slug)
         
         # Construct us the dict of "extra" info from the request
-        extra = request.data.copy()
+        extra = request.data['client'].copy()
         for k in ('success', 'started', 'finished', 'client', 'results', 'tags'):
-            del extra[k]
+            extra.pop(k, None)
         
         # Create the Build object
         try:
@@ -180,7 +181,11 @@ class ProjectBuildListHandler(PaginatedBuildHandler):
                 host = request.data['client']['host'],
                 arch = request.data['client']['arch'],
                 user = request.user.is_authenticated() and request.user or None,
-                extra_info = extra,
+
+                # Because of some weirdness with the way fields are handled in
+                # __init__, we have to encode extra as JSON manually here.
+                # TODO: investiage why and fix JSONField
+                extra_info = simplejson.dumps(extra),
             )
         except (KeyError, ValueError), ex:
             # We'll get a KeyError from request.data[k] if the given key
@@ -198,7 +203,7 @@ class ProjectBuildListHandler(PaginatedBuildHandler):
             # extra_info logic as above
             extra = result.copy()
             for k in ('success', 'started', 'finished', 'name', 'output', 'errout'):
-                del extra[k]
+                extra.pop(k, None)
                 
             # Create the BuildStep, handling errors as above
             try:

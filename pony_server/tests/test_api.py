@@ -290,8 +290,8 @@ class BuildListTests(PonyTests):
             u'success': False,
             u'started': u'Mon, 26 Oct 2009 16:22:00 -0500',
             u'finished': u'Mon, 26 Oct 2009 16:25:00 -0500',
-            u'tags': [u'pony', 'build', 'rocks'],
-            u'client': {u'host': u'example.com', u'user': u'', u'arch': u'linux-i386'},
+            u'tags': [u'pony', u'build', u'rocks'],
+            u'client': {u'host': u'example.com', u'user': u'', u'arch': u'linux-i386', u'extra': u'hi!'},
             u'results': [
                 {u'errout': u'',
                  u'finished': u'Mon, 26 Oct 2009 16:25:00 -0500',
@@ -306,8 +306,6 @@ class BuildListTests(PonyTests):
                  u'started': u'Mon, 26 Oct 2009 16:22:00 -0500',
                  u'success': False}
             ],
-            u'extra1': u'hi',
-            u'extra2': u'there',
         }
         
         r = self.client.post('/pony/builds', data=simplejson.dumps(build),
@@ -317,7 +315,44 @@ class BuildListTests(PonyTests):
         
         # make sure the build info came through okay
         r = self.client.get('/pony/builds/2')
-        self.assertJsonEqual(r, build)
+        self.assertJsonEqual(r, {
+            u'success': False,
+            u'started': u'Mon, 26 Oct 2009 16:22:00 -0500',
+            u'finished': u'Mon, 26 Oct 2009 16:25:00 -0500',
+            u'tags': [u'build', u'pony', u'rocks'],
+            u'client': {u'host': u'example.com', u'user': u'', u'arch': u'linux-i386', u'extra': u'hi!'},
+            u'results': [
+                {u'errout': u'',
+                 u'finished': u'Mon, 26 Oct 2009 16:25:00 -0500',
+                 u'name': u'test',
+                 u'output': u'Step 1: OK',
+                 u'started': u'Mon, 26 Oct 2009 16:21:30 -0500',
+                 u'success': True},
+                {u'errout': u'',
+                 u'finished': u'Mon, 26 Oct 2009 16:21:00 -0500',
+                 u'name': u'checkout',
+                 u'output': u'Step 2: OK',
+                 u'started': u'Mon, 26 Oct 2009 16:22:00 -0500',
+                 u'success': False}
+            ],
+            u'links': [
+                {u'allowed_methods': [u'GET'],
+                 u'href': u'/pony/builds/2',
+                 u'rel': u'self'},
+                {u'allowed_methods': [u'GET', u'PUT', u'DELETE'],
+                 u'href': u'/pony',
+                 u'rel': u'project'},
+                {u'allowed_methods': [u'GET'],
+                 u'href': u'/pony/tags/build',
+                 u'rel': u'tag'},
+                {u'allowed_methods': [u'GET'],
+                 u'href': u'/pony/tags/pony',
+                 u'rel': u'tag'},
+                {u'allowed_methods': [u'GET'],
+                 u'href': u'/pony/tags/rocks',
+                 u'rel': u'tag'}
+            ],
+        })
 
 class LatestBuildTests(PonyTests):
     def test_get_latest_build(self):
