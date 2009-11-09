@@ -46,7 +46,7 @@ class PackageListTests(PonyTests):
                     {u'allowed_methods': [u'GET', u'PUT', u'DELETE'],
                      u'href': u'/pony', 
                      u'rel': u'self'},
-                    {u'allowed_methods': [u'GET'],
+                    {u'allowed_methods': [u'GET', u'POST'],
                      u'href': u'/pony/builds',
                      u'rel': u'build-list'},
                     {u'allowed_methods': [u'GET'],
@@ -74,7 +74,7 @@ class PackageDetailTests(PonyTests):
                 {u'allowed_methods': [u'GET', u'PUT', u'DELETE'], 
                  u'href': u'/pony', 
                  u'rel': u'self'},
-                {u'allowed_methods': [u'GET'], 
+                {u'allowed_methods': [u'GET', u'POST'],
                  u'href': u'/pony/builds', 
                  u'rel': u'build-list'},
                 {u'allowed_methods': [u'GET'],
@@ -108,7 +108,7 @@ class PackageDetailTests(PonyTests):
                 {u'allowed_methods': [u'GET', u'PUT', u'DELETE'],
                  u'href': u'/proj', 
                  u'rel': u'self'},
-                {u'allowed_methods': [u'GET'],
+                {u'allowed_methods': [u'GET', u'POST'],
                  u'href': u'/proj/builds', 
                  u'rel': u'build-list'},
                 {u'allowed_methods': [u'GET'],
@@ -149,7 +149,7 @@ class PackageDetailTests(PonyTests):
                 {u'allowed_methods': [u'GET', u'PUT', u'DELETE'],
                  u'href': u'/proj', 
                  u'rel': u'self'},
-                {u'allowed_methods': [u'GET'], 
+                {u'allowed_methods': [u'GET', u'POST'],
                  u'href': u'/proj/builds', 
                  u'rel': u'build-list'},
                 {u'allowed_methods': [u'GET'],
@@ -219,6 +219,24 @@ class BuildListTests(PonyTests):
             u'page': 1,
             u'paginated': False,
             u'per_page': 25,
+            u'project': {
+                u'name': u'pony',
+                u'owner': u'',
+                u'links': [
+                    {u'allowed_methods': [u'GET', u'PUT', u'DELETE'],
+                     u'href': u'/pony',
+                     u'rel': u'self'},
+                    {u'allowed_methods': [u'GET', u'POST'],
+                     u'href': u'/pony/builds',
+                     u'rel': u'build-list'},
+                    {u'allowed_methods': [u'GET'],
+                     u'href': u'/pony/builds/latest',
+                     u'rel': u'latest-build'},
+                    {u'allowed_methods': [u'GET'],
+                     u'href': u'/pony/tags',
+                     u'rel': u'tag-list'}
+                ],
+            },
             u'builds': [{
                 u'success': True,
                 u'started': u'Mon, 19 Oct 2009 16:22:00 -0500',
@@ -294,7 +312,7 @@ class BuildListTests(PonyTests):
         
         r = self.client.post('/pony/builds', data=simplejson.dumps(build),
                              content_type='application/json')
-        self.assertEqual(r.status_code, 201) # 201 created
+        self.assertEqual(r.status_code, 201, r) # 201 created
         self.assertEqual(r['Location'], 'http://testserver/pony/builds/2')
         
         # make sure the build info came through okay
