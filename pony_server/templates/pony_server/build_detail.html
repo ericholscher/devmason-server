@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block header %}
+Sweet Pony Build Results, yo!
+{% endblock %}
+
+{% block content %}
+<h3 class="top_main_heading">Build information</h3>
+   <p>
+{{ build }}<Br>
+{% if user %}
+	User: {{ build.user }}<Br>
+{% endif %}
+Success: {{ build.success }}<Br>
+Host: {{ build.host }}<Br>
+Arch: {{ build.arch }}<Br>
+{% for step in build.steps.all %}
+	<strong>{{ step }}</strong><br>
+	Success: {{ step.success }}<Br>
+Errout: <pre>
+{{ step.errout }}
+</pre>
+<Br>
+	Output: {{ step.output }}<Br>
+{% endfor %}
+</p>
+
+{% endblock %}

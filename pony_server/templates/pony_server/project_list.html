@@ -7,10 +7,10 @@ Sweet Pony Build Results, yo!
 {% block content %}
 <h3 class="top_main_heading">Build information</h3>
    <p>
-{{ object }}<Br>
-Success: {{ object.client.success }}<Br>
-Err Output: {{ object.errout }}<Br>
-Output: {{ object.output }}<Br>
-</p>
+   We have build information for:<br>
 
+{% for project in projects %}
+<a href="{{ project.get_absolute_url }}">{{ project }}</a><br>
+
+{% endfor %}
 {% endblock %}
