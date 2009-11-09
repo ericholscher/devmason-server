@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from django.db import transaction
 from django.core.paginator import Paginator, InvalidPage
 from django.core import urlresolvers
 from django.http import Http404, HttpResponseForbidden, HttpResponseBadRequest
@@ -10,10 +10,6 @@ from .models import Project, Build, BuildStep
 from .utils import (link, allow_404, authentication_required,
                     authentication_optional, format_dt, HttpResponseCreated,
                     HttpResponseNoContent, mk_datetime)
-try:
-    import json
-except:
-    import simplejson as json
 
 class ProjectListHandler(BaseHandler):
     allowed_methods = ['GET']
@@ -152,44 +148,80 @@ class ProjectBuildListHandler(PaginatedBuildHandler):
         ]
 
         def make_link(rel, **kwargs):
-            links.append(link(rel, self, project.slug, **kwargs))
+            # None of the paginated pages should allow anything other than GET
+            l = link(rel, self, project.slug, **kwargs)
+            l['allowed_methods'] = ['GET']
+            links.append(l)
 
         response = self.handle_paginated_builds(builds, request.GET, make_link)
         response['links'] = links
         response['project'] = project
         return response
 
+    @allow_404
+    @require_mime('json')
+    @authentication_optional
+    @transaction.commit_on_success
     def create(self, request, slug):
         project = get_object_or_404(Project, slug=slug)
-        obj = json.loads(request.POST['build'])
-        client = obj['client']
+        
+        # Construct us the dict of "extra" info from the request
+        extra = request.data.copy()
+        for k in ('success', 'started', 'finished', 'client', 'results', 'tags'):
+            del extra[k]
+        
+        # Create the Build object
         try:
-            user = User.objects.get(username=client['user'])
-        except:
-            user = None
-        build = Build.objects.create(
-            project=project,
-            success = obj['success'],
-            started = mk_datetime(obj['started']),
-            finished = mk_datetime(obj['finished']),
-            host = client['host'],
-            arch = client['arch'],
-            user = user,
-            extra_info = None,
-        )
-        for result in obj['results']:
-            BuildStep.objects.create(
-                build = build,
-                success = result['success'],
-                started = mk_datetime(result['started']),
-                finished = mk_datetime(result['finished']),
-                name = result['name'],
-                output = getattr(result, 'output', ''),
-                errout = result['errout'],
-                extra_info = None,
+            build = Build.objects.create(
+                project = project,
+                success = request.data['success'],
+                started = mk_datetime(request.data['started']),
+                finished = mk_datetime(request.data['finished']),
+                host = request.data['client']['host'],
+                arch = request.data['client']['arch'],
+                user = request.user.is_authenticated() and request.user or None,
+                extra_info = extra,
             )
-
-
+        except (KeyError, ValueError), ex:
+            # We'll get a KeyError from request.data[k] if the given key
+            # is missing and ValueError from improperly formatted dates.
+            # Treat either of these as improperly formatted requests
+            # and return a 400 (Bad Request) 
+            return HttpResponseBadRequest(str(ex))
+        
+        # Tag us a build
+        if 'tags' in request.data:
+            build.tags = request.data['tags']
+        
+        # Create each build step
+        for result in request.data.get('results', []):
+            # extra_info logic as above
+            extra = result.copy()
+            for k in ('success', 'started', 'finished', 'name', 'output', 'errout'):
+                del extra[k]
+                
+            # Create the BuildStep, handling errors as above
+            try:
+                BuildStep.objects.create(
+                    build = build,
+                    success = result['success'],
+                    started = mk_datetime(result['started']),
+                    finished = mk_datetime(result['finished']),
+                    name = result['name'],
+                    output = getattr(result, 'output', ''),
+                    errout = getattr(result, 'errout', ''),
+                    extra_info = extra,
+                )
+            except (KeyError, ValueError), ex:
+                # We'll get a KeyError from request.data[k] if the given key
+                # is missing and ValueError from improperly formatted dates.
+                # Treat either of these as improperly formatted requests
+                # and return a 400 (Bad Request) 
+                return HttpResponseBadRequest(str(ex))
+                
+        # It worked! Return a 201 created
+        url = urlresolvers.reverse(BuildHandler.viewname, args=[project.slug, build.pk])
+        return HttpResponseCreated(url)
 
 class BuildHandler(BaseHandler):
     allowed_methods = ['GET']
