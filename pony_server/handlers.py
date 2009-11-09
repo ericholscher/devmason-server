@@ -181,7 +181,7 @@ class ProjectBuildListHandler(PaginatedBuildHandler):
                 host = request.data['client']['host'],
                 arch = request.data['client']['arch'],
                 user = request.user.is_authenticated() and request.user or None,
-
+                
                 # Because of some weirdness with the way fields are handled in
                 # __init__, we have to encode extra as JSON manually here.
                 # TODO: investiage why and fix JSONField

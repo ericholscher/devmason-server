@@ -2,9 +2,11 @@
 Piston API helpers.
 """
 
+import time
 import datetime
 import functools
 import mimeparse
+import email.utils
 import piston.resource
 import piston.emitters
 import piston.handler
@@ -18,6 +20,13 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils import dateformat
 from django.utils.http import urlencode
+
+# Try to use dateutil for maximum date-parsing niceness. Fall back to
+# hard-coded RFC2822 parsing if that's not possible.
+try:
+    import dateutil.parser
+except ImportError:
+    dateutil = None
 
 class Resource(piston.resource.Resource):
     """Chooses an emitter based on mime types."""
@@ -169,5 +178,10 @@ def authentication_optional(callback):
 def format_dt(dt):
     return dateformat.format(dt, 'r')
 
-def mk_datetime(string):
-    return datetime.datetime.strptime(string, '%Y-%m-%dT%H:%M:%S')
+# Try to use dateutil for maximum date-parsing niceness. Fall back to
+# hard-coded RFC2822 parsing if that's not possible.
+if dateutil:
+    mk_datetime = dateutil.parser.parse
+else:
+    def mk_datetime(string):
+        return datetime.datetime.fromtimestamp(time.mktime(email.utils.parsedate(string)))
