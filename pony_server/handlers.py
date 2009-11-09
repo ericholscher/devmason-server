@@ -117,9 +117,9 @@ class PaginatedBuildHandler(BaseHandler):
         if page.has_other_pages():
             link_callback('first', page=1, per_page=per_page)
             link_callback('last', page=paginator.num_pages, per_page=per_page)
-            if page.has_previous_page():
+            if page.has_previous():
                 link_callback('previous', page=page.previous_page_number(), per_page=per_page)
-            if page.has_next_page():
+            if page.has_next():
                 link_callback('next', page=page.next_page_number(), per_page=per_page)
         
         response = {
