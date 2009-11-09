@@ -196,7 +196,7 @@ class ProjectBuildListHandler(PaginatedBuildHandler):
         
         # Tag us a build
         if 'tags' in request.data:
-            build.tags = request.data['tags']
+            build.tags = ",".join(request.data['tags'])
         
         # Create each build step
         for result in request.data.get('results', []):
