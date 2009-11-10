@@ -17,8 +17,13 @@ class ProjectListHandler(BaseHandler):
     viewname = 'project_list'
 
     def read(self, request):
+        projects =  Project.objects.filter(builds__isnull=False)
+        builds = {}
+        for project in projects:
+            builds[project.slug] = project.builds.all()[0]
         return {
-            'projects': Project.objects.all(),
+            'projects': projects,
+            'builds': builds,
             'links': [link('self', ProjectListHandler)]
         }
 
