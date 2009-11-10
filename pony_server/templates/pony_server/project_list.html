@@ -1,16 +1,21 @@
-{% extends "base.html" %}
-
-{% block header %}
-Sweet Pony Build Results, yo!
-{% endblock %}
-
+{% extends "nathan_base.html" %}
+ 
+{% block title %} Latest Results {% endblock %}
+ 
 {% block content %}
-<h3 class="top_main_heading">Build information</h3>
-   <p>
-   We have build information for:<br>
-
-{% for project in projects %}
-<a href="{{ project.get_absolute_url }}">{{ project }}</a><br>
-
-{% endfor %}
+ 
+<div class="sites">
+  {% for project, build in builds.items %}
+  <div class="site">
+    <h3> {{ project }} </h3>
+    <p class="{% if forloop.last %}last{% endif %} first">
+    <a class="{{ build.success|yesno:'passed,succeeded' }}" href="{{ build.get_absolute_url }}" title="{{ project.slug }}">
+        <strong>{{ build.success|yesno:"PASSED,FAILED" }}</strong>
+        <small><em>{{ build.host }} - {{ build.user }}</em></small>
+      </a>
+    </p>
+  </div>
+  {% endfor %}
+</div>
+ 
 {% endblock %}

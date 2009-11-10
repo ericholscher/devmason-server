@@ -13,9 +13,12 @@ def start_build(request):
     git_url = url.replace('http://', 'git://')
     hash = obj['after']
 
-    import ipdb; ipdb.set_trace()
     project = Project.objects.get(slug=name)
-    repo = Repository.objects.get_or_create(url=git_url)
+    repo, created = Repository.objects.get_or_create(
+         url=git_url,
+         project=project,
+         type='git',
+    )
     brequest = BuildRequest.objects.create(
         repository = repo,
         identifier = hash,
