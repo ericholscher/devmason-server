@@ -20,7 +20,7 @@ class ProjectListHandler(BaseHandler):
         projects =  Project.objects.filter(builds__isnull=False)
         builds = {}
         for project in projects:
-            builds[project.slug] = project.builds.all()[0]
+            builds[project.slug] = list(project.builds.all())[-1]
         return {
             'projects': projects,
             'builds': builds,
