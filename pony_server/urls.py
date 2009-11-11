@@ -11,6 +11,10 @@ urlpatterns = patterns('',
         'pony_server.views.start_build',
         name='start_build'
     ),
+    url(r'xmlrpc',
+        'pony_server.views.xmlrpc',
+        name='xmlrpc'
+    ),
     url(r'^(?P<slug>[\w-]+)$',
         Resource(handlers.ProjectHandler),
         name = 'project_detail'

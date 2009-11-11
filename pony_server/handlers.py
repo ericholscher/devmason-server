@@ -170,23 +170,24 @@ class ProjectBuildListHandler(PaginatedBuildHandler):
     @transaction.commit_on_success
     def create(self, request, slug):
         project = get_object_or_404(Project, slug=slug)
-        
+
         # Construct us the dict of "extra" info from the request
+        data = request.data
         extra = request.data['client'].copy()
         for k in ('success', 'started', 'finished', 'client', 'results', 'tags'):
             extra.pop(k, None)
-        
+
         # Create the Build object
         try:
             build = Build.objects.create(
                 project = project,
-                success = request.data['success'],
-                started = mk_datetime(request.data['started']),
-                finished = mk_datetime(request.data['finished']),
-                host = request.data['client']['host'],
-                arch = request.data['client']['arch'],
+                success = data['success'],
+                started = mk_datetime(getattr(data, 'started', '')),
+                finished = mk_datetime(getattr(data, 'finished', '')),
+                host = data['client']['host'],
+                arch = data['client']['arch'],
                 user = request.user.is_authenticated() and request.user or None,
-                
+
                 # Because of some weirdness with the way fields are handled in
                 # __init__, we have to encode extra as JSON manually here.
                 # TODO: investiage why and fix JSONField
@@ -196,27 +197,27 @@ class ProjectBuildListHandler(PaginatedBuildHandler):
             # We'll get a KeyError from request.data[k] if the given key
             # is missing and ValueError from improperly formatted dates.
             # Treat either of these as improperly formatted requests
-            # and return a 400 (Bad Request) 
+            # and return a 400 (Bad Request)
             return HttpResponseBadRequest(str(ex))
-        
+
         # Tag us a build
-        if 'tags' in request.data:
-            build.tags = ",".join(request.data['tags'])
-        
+        if 'tags' in data:
+            build.tags = ",".join(data['tags'])
+
         # Create each build step
         for result in request.data.get('results', []):
             # extra_info logic as above
             extra = result.copy()
             for k in ('success', 'started', 'finished', 'name', 'output', 'errout'):
                 extra.pop(k, None)
-                
+
             # Create the BuildStep, handling errors as above
             try:
                 BuildStep.objects.create(
                     build = build,
                     success = result['success'],
-                    started = mk_datetime(result['started']),
-                    finished = mk_datetime(result['finished']),
+                    started = mk_datetime(getattr(result, 'started', '')),
+                    finished = mk_datetime(getattr(result, 'finished', '')),
                     name = result['name'],
                     output = result.get('output', ''),
                     errout = result.get('errout', ''),
@@ -226,9 +227,9 @@ class ProjectBuildListHandler(PaginatedBuildHandler):
                 # We'll get a KeyError from request.data[k] if the given key
                 # is missing and ValueError from improperly formatted dates.
                 # Treat either of these as improperly formatted requests
-                # and return a 400 (Bad Request) 
+                # and return a 400 (Bad Request)
                 return HttpResponseBadRequest(str(ex))
-                
+
         # It worked! Return a 201 created
         url = urlresolvers.reverse(BuildHandler.viewname, args=[project.slug, build.pk])
         return HttpResponseCreated(url)
