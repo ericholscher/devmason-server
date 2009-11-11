@@ -2,7 +2,7 @@ try:
     import json
 except:
     import simplejson as json
-   
+
 import datetime
 from SimpleXMLRPCServer import SimpleXMLRPCDispatcher
 from django.http import HttpResponse
@@ -10,7 +10,6 @@ from django.core.handlers.wsgi import WSGIRequest
 
 from pony_server.models import Repository, BuildRequest, Project
 from pony_server.handlers import ProjectBuildListHandler
-from pony_server.utils import RequestFactory
 
 def start_build(request):
     obj = json.loads(request.POST['payload'])
