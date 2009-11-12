@@ -70,8 +70,12 @@ def add_results(info, results):
                 }
 
     for result in results:
+        success = False
+        #Status code of 0 means successful
+        if result.get('status', False) == 0:
+            success = True
         build_dict['results'].append(
-                       {'success': result.get('status', False),
+                       {'success': success,
                         'name': result.get('name', ''),
                         'errout': result.get('errout', ''),
                         'output': result.get('out', ''),
