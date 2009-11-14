@@ -11,7 +11,7 @@ from django.core.handlers.wsgi import WSGIRequest
 from pony_server.models import Repository, BuildRequest, Project
 from pony_server.handlers import ProjectBuildListHandler
 
-def start_build(request):
+def github_build(request):
     obj = json.loads(request.POST['payload'])
     name = obj['repository']['name']
     url = obj['repository']['url']
@@ -29,7 +29,37 @@ def start_build(request):
         identifier = hash,
         requested = datetime.datetime.utcnow(),
     )
+def bitbucket_build(request):
+    rep = obj['repository']
+    name = rep['name']
+    url = "%s%s" % (rep['website'].rstrip('/'), rep['absolute_url'])
+    #git_url = url.replace('http://', 'hg://')
+    hash = obj['commits'][0]['node']
 
+    project = Project.objects.get(slug=name)
+    repo, created = Repository.objects.get_or_create(
+         url=url,
+         project=project,
+         type='git',
+    )
+    brequest = BuildRequest.objects.create(
+        repository = repo,
+        identifier = hash,
+        requested = datetime.datetime.utcnow(),
+    )
+
+def request_build(request):
+    obj = json.loads(request.raw_post_data)
+    project = obj['project']
+    identifier = obj['identifier']
+    repo = Repository.objects.get(project__slug=project)
+    brequest = BuildRequest.objects.create(
+        repository = repo,
+        identifier = identifier,
+        requested = datetime.datetime.utcnow(),
+    )
+
+### Crazy XMLRPC stuff below here.
 
 # Create a Dispatcher; this handles the calls and translates info to function maps
 dispatcher = SimpleXMLRPCDispatcher(allow_none=False, encoding=None) # Python 2.5

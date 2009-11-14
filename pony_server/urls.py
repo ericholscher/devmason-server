@@ -7,9 +7,17 @@ urlpatterns = patterns('',
         Resource(handlers.ProjectListHandler),
         name = 'project_list'
     ),
-    url(r'start_build/',
-        'pony_server.views.start_build',
-        name='start_build'
+    url(r'builds/github',
+        'pony_server.views.github_build',
+        name='github_build'
+    ),
+    url(r'builds/bitbucket',
+        'pony_server.views.bitbucket_build',
+        name='bitbucket_build'
+    ),
+    url(r'builds/request',
+        'pony_server.views.request_build',
+        name='request_build'
     ),
     url(r'xmlrpc',
         'pony_server.views.xmlrpc',
