@@ -10,6 +10,7 @@ from django.core.handlers.wsgi import WSGIRequest
 
 from pony_server.models import Repository, BuildRequest, Project
 from pony_server.handlers import ProjectBuildListHandler
+from pony_utils.utils import slugify
 
 def github_build(request):
     obj = json.loads(request.POST['payload'])
@@ -88,8 +89,8 @@ def xmlrpc(request):
 def add_results(info, results):
     "Return sweet results"
     build_dict = {'success': info.get('success', False),
-                    #'started': ,
-                    #'finished': ,
+                    'started': info.get('start_time', ''),
+                    'finished': info.get('end_time', ''),
                     'tags': info['tags'],
                     'client': {
                         'arch': info.get('arch', ''),
@@ -128,7 +129,9 @@ def add_results(info, results):
     r = WSGIRequest(environ)
     r.data = build_dict
     r.META['CONTENT_TYPE'] = 'application/json'
-    ProjectBuildListHandler().create(r, info.get('package'))
+    package = unicode(info.get('package'))
+    pro, created = Project.objects.get_or_create(name=package, slug=slugify(package))
+    ProjectBuildListHandler().create(r, package)
     return "Processed Correctly"
 
 
