@@ -81,3 +81,10 @@ class BuildRequest(models.Model):
     repository = models.ForeignKey(Repository, related_name='build_requests')
     identifier = models.CharField(max_length=200)
     requested = models.DateTimeField()
+
+
+    def __unicode__(self):
+        return "Build for %s: %s" % (self.repository.project, self.identifier)
+    
+    class Meta:
+        ordering = ['-requested']

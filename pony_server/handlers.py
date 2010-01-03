@@ -17,12 +17,14 @@ class ProjectListHandler(BaseHandler):
     viewname = 'project_list'
 
     def read(self, request):
-        projects =  Project.objects.filter(builds__isnull=False)
+        latest_builds = Build.objects.filter(host="Loki").order_by('-pk')[:10]
+        projects =  Project.objects.filter(builds__isnull=False).distinct()
         builds = {}
         for project in projects:
-            builds[project.name] = list(project.builds.all())[-1]
+            builds[project.name] = list(project.builds.filter(host="Loki").order_by('-pk'))[0]
         return {
             'projects': projects,
+            'latest_builds': latest_builds,
             'builds': builds,
             'links': [link('self', ProjectListHandler)]
         }
@@ -182,8 +184,8 @@ class ProjectBuildListHandler(PaginatedBuildHandler):
             build = Build.objects.create(
                 project = project,
                 success = data['success'],
-                started = mk_datetime(getattr(data, 'started', '')),
-                finished = mk_datetime(getattr(data, 'finished', '')),
+                started = mk_datetime(data.get('started', '')),
+                finished = mk_datetime(data.get('finished', '')),
                 host = data['client']['host'],
                 arch = data['client']['arch'],
                 user = request.user.is_authenticated() and request.user or None,
@@ -301,7 +303,7 @@ class LatestBuildHandler(BaseHandler):
     @allow_404
     def read(self, request, slug):
         project = get_object_or_404(Project, slug=slug)
-        build = project.builds.latest('finished')
+        build = list(project.builds.all().order_by('-pk'))[0]
         return redirect('build_detail', slug, build.pk)
 
 class ProjectTagListHandler(BaseHandler):

@@ -30,6 +30,7 @@ def github_build(request):
         identifier = hash,
         requested = datetime.datetime.utcnow(),
     )
+
 def bitbucket_build(request):
     rep = obj['repository']
     name = rep['name']
@@ -130,7 +131,10 @@ def add_results(info, results):
     r.data = build_dict
     r.META['CONTENT_TYPE'] = 'application/json'
     package = unicode(info.get('package'))
-    pro, created = Project.objects.get_or_create(name=package, slug=slugify(package))
+    try:
+        pro, created = Project.objects.get_or_create(name=package, slug=slugify(package))
+    except:
+        pass
     ProjectBuildListHandler().create(r, package)
     return "Processed Correctly"
 

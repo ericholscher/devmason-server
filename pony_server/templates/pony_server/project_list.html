@@ -3,9 +3,28 @@
 {% block title %} Latest Results {% endblock %}
  
 {% block content %}
+
+<h3> What is this? </h3>
+<p>
+DevMason is a new service that runs your tests when you commit your code. It is currently in a private beta.
+<a href="/invites/">Request an Invite</a>
+</p>
+
+<h3> Latest Builds </h3>
+<ul class="recent_projects">
+{% for build in latest_builds %}
+<li>
+<img width="14" src="{{ STATIC_MEDIA_URL }}/media/images/{{ build.success|yesno:"pass,fail" }}.png" />
+<a class="{{ build.success|yesno:'passed,succeeded' }}"
+    href="{{ build.get_absolute_url }}">{{ build }}
+</a>
+</li>
+{% endfor %}
+</ul>
  
 <div class="sites">
-  {% for project, build in builds.items %}
+<h3> All Projects </h3>
+{% for project, build in builds.items %}
   <div class="site">
     <h3> {{ project }} </h3>
     <p class="{% if forloop.last %}last{% endif %} first">
