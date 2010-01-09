@@ -21,7 +21,10 @@ class ProjectListHandler(BaseHandler):
         projects =  Project.objects.filter(builds__isnull=False).distinct()
         builds = {}
         for project in projects:
-            builds[project.name] = list(project.builds.filter(host="Loki").order_by('-pk'))[0]
+            try:
+                builds[project.name] = list(project.builds.filter(host="Loki").order_by('-pk'))[0]
+            except:
+                pass
         return {
             'projects': projects,
             'latest_builds': latest_builds,

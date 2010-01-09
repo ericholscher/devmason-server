@@ -32,17 +32,17 @@ def github_build(request):
     )
 
 def bitbucket_build(request):
+    obj = json.loads(request.POST['payload'])
     rep = obj['repository']
     name = rep['name']
-    url = "%s%s" % (rep['website'].rstrip('/'), rep['absolute_url'])
-    #git_url = url.replace('http://', 'hg://')
+    url = "%s%s" % ("http://bitbucket.org",  rep['absolute_url'])
     hash = obj['commits'][0]['node']
 
     project = Project.objects.get(slug=name)
     repo, created = Repository.objects.get_or_create(
          url=url,
          project=project,
-         type='git',
+         type='hg',
     )
     brequest = BuildRequest.objects.create(
         repository = repo,
