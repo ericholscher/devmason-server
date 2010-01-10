@@ -14,9 +14,11 @@ DevMason is a new service that runs your tests when you commit your code. It is 
 <ul class="recent_projects">
 {% for build in latest_builds %}
 <li>
-<img width="14" src="{{ STATIC_MEDIA_URL }}/media/images/{{ build.success|yesno:"pass,fail" }}.png" />
-<a class="{{ build.success|yesno:'passed,succeeded' }}"
-    href="{{ build.get_absolute_url }}">{{ build }}
+<a href="{{ build.get_absolute_url }}">
+    <img width="14" src="{{ STATIC_MEDIA_URL }}/media/images/{{ build.success|yesno:"pass,fail" }}.png" />
+</a>
+<a href="{{ build.project.get_absolute_url }}"> 
+    {{ build.project }} 
 </a>
 </li>
 {% endfor %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block header %}
+Sweet Pony Build Results, yo!
+{% endblock %}
+
+{% block title %}
+{{ tags.0 }}
+{% endblock %}
+
+{% block content %}
+{% with tags.0 as tag %}
+{% for build in builds %}
+<h3 class="top_main_heading">{{ build }}</h3>
+   <p>
+Success: <strong>{{ build.success|yesno:"Passed,Failed" }}</strong><Br>
+{% if user %}
+User: {{ build.user }}<Br>
+{% endif %}
+Host: {{ build.host }}<Br>
+Arch: {{ build.arch }}<Br>
+Tags: {% for tag in build.tags %}{{ tag.name }} {% endfor %}<Br>
+Started: {{ build.started|date:"jS F H:i" }}<Br>
+Finished: {{ build.finished|date:"jS F H:i" }}<Br>
+<hr>
+{% for step in build.steps.all %}
+    <img width="14" src="{{ STATIC_MEDIA_URL }}/media/images/{{ step.success|yesno:"pass,fail" }}.png" />
+    <strong>{{ step.name }}</strong><br>
+    {% if step.errout %}
+        Error Output: 
+        <pre>
+        {{ step.errout }}
+        </pre>
+    {% endif %}
+    {% if step.output %}
+        Output: {{ step.output }}<Br>
+    {% endif %}
+{% endfor %}
+{% endfor %}
+{% endwith %}
+
+{% endblock %}
