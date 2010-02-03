@@ -88,3 +88,6 @@ class BuildRequest(models.Model):
     
     class Meta:
         ordering = ['-requested']
+
+import signals
+#Make sure signals get reg'd

@@ -4,16 +4,27 @@
 Sweet Pony Build Results, yo!
 {% endblock %}
 
+{% block title %}
+Builds for {{ project }}
+{% endblock %}
+
 {% block content %}
 <h3 class="top_main_heading">Build information</h3>
    <p>
 <strong>{{ project }}</strong><Br>
+{% if not project.owner %}
+    {% if request.user.is_authenticated %}
+        <a href="{% url claim_project project.slug %}">Claim Project</a><br><br>
+    {% endif %}
+{% else %}
+Owner: {{ project.owner.username }}<br><br>
+{% endif %}
 {% for build in project.builds.all %}
     <img width="14" src="{{ STATIC_MEDIA_URL }}/media/images/{{ build.success|yesno:"pass,fail" }}.png" />
     <a href="{{ build.get_absolute_url }}">{{ build }}</a>
     | Tags: 
     {% for tag in build.tags %}
-    <a href="{{ tag.get_absolute_url }}">{{ tag }}</a>
+    <a href="{% url tag_detail project.slug tag.name %}">{{ tag }}</a>
     {% endfor %}
     | {{ build.started|date:"jS F H:i" }}
     <Br>

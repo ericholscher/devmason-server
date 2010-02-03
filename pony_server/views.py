@@ -12,6 +12,12 @@ from pony_server.models import Repository, BuildRequest, Project
 from pony_server.handlers import ProjectBuildListHandler
 from pony_utils.utils import slugify
 
+def claim_project(request, slug):
+    project = Project.objects.get(slug=slug)
+    project.owner = request.user
+    project.save()
+    return HttpResponse('Project has been claimed')
+
 def github_build(request):
     obj = json.loads(request.POST['payload'])
     name = obj['repository']['name']
@@ -30,6 +36,7 @@ def github_build(request):
         identifier = hash,
         requested = datetime.datetime.utcnow(),
     )
+    return HttpResponse('Build Started')
 
 def bitbucket_build(request):
     obj = json.loads(request.POST['payload'])
@@ -49,6 +56,7 @@ def bitbucket_build(request):
         identifier = hash,
         requested = datetime.datetime.utcnow(),
     )
+    return HttpResponse('Build Started')
 
 def request_build(request):
     obj = json.loads(request.raw_post_data)
@@ -60,6 +68,7 @@ def request_build(request):
         identifier = identifier,
         requested = datetime.datetime.utcnow(),
     )
+    return HttpResponse('Build Started')
 
 ### Crazy XMLRPC stuff below here.
 
@@ -110,7 +119,7 @@ def add_results(info, results):
                        {'success': success,
                         'name': result.get('name', ''),
                         'errout': result.get('errout', ''),
-                        'output': result.get('out', ''),
+                        'output': result.get('output', ''),
                         'command': result.get('command', ''),
                         'type': result.get('type', ''),
                         'version_type': result.get('version_type', ''),

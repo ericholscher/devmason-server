@@ -27,6 +27,10 @@ urlpatterns = patterns('',
         Resource(handlers.ProjectHandler),
         name = 'project_detail'
     ),
+    url(r'^(?P<slug>[\w-]+)/claim$',
+        'pony_server.views.claim_project',
+        name = 'claim_project'
+    ),
     url(r'^(?P<slug>[\w-]+)/builds$',
         Resource(handlers.ProjectBuildListHandler),
         name = 'project_build_list'

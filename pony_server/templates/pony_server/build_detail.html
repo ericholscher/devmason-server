@@ -24,15 +24,20 @@ Finished: {{ build.finished|date:"jS F H:i" }}<Br>
 {% for step in build.steps.all %}
     <img width="14" src="{{ STATIC_MEDIA_URL }}/media/images/{{ step.success|yesno:"pass,fail" }}.png" />
     <strong>{{ step.name }}</strong><br>
-    {% if step.errout %}
-        Error Output: 
-        <pre>
-        {{ step.errout }}
-        </pre>
-    {% endif %}
-    {% if step.output %}
-        Output: {{ step.output }}<Br>
-    {% endif %}
+
+{% if step.output %}
+<strong>Output</strong>: 
+<pre>
+{{ step.output }}
+</pre>
+{% endif %}
+
+{% if step.errout %}
+<strong>Error Output</strong>: 
+<pre>
+{{ step.errout }}
+</pre>
+{% endif %}
 {% endfor %}
 
 {% endblock %}

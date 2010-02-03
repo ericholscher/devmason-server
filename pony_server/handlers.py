@@ -17,12 +17,12 @@ class ProjectListHandler(BaseHandler):
     viewname = 'project_list'
 
     def read(self, request):
-        latest_builds = Build.objects.filter(host="Loki").order_by('-pk')[:10]
+        latest_builds = Build.objects.order_by('-pk')[:10]
         projects =  Project.objects.filter(builds__isnull=False).distinct()
         builds = {}
         for project in projects:
             try:
-                builds[project.name] = list(project.builds.filter(host="Loki").order_by('-pk'))[0]
+                builds[project.name] = list(project.builds.order_by('-pk'))[0]
             except:
                 pass
         return {
