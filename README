@@ -1,7 +1,5 @@
-Pony Server.
+Devmason Server.
 
 A basic Django implementation of the backend server for Pony Build.
 
-It implements a very naive and basic model structure at the moment, using XML RPC. This should eventually be a drop in replcement for pony-build's own key value store.
-
-It loses some of the flexibility, and it feels like Results needs to be more dynamic somehow. Maybe a good use case for a Key Value store.
+Currently running at devmason.com
