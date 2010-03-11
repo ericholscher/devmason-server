@@ -10,7 +10,7 @@ from django.core.handlers.wsgi import WSGIRequest
 
 from devmason_server.models import Repository, BuildRequest, Project
 from devmason_server.handlers import ProjectBuildListHandler
-from pony_utils.utils import slugify
+from devmason_utils.utils import slugify
 
 def claim_project(request, slug):
     project = Project.objects.get(slug=slug)
