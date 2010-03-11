@@ -1,6 +1,6 @@
 [
   {
-    "model": "pony_server.project",
+    "model": "devmason_server.project",
     "pk": 1,
     "fields": {
       "name": "pony",
@@ -8,7 +8,7 @@
     }
   },
   {
-    "model": "pony_server.build",
+    "model": "devmason_server.build",
     "pk": 1,
     "fields": {
       "project": 1,
@@ -20,7 +20,7 @@
     }
   },
   {
-    "model": "pony_server.buildstep",
+    "model": "devmason_server.buildstep",
     "pk": 1,
     "fields": {
       "build": 1,
@@ -32,7 +32,7 @@
     }
   },
   {
-    "model": "pony_server.buildstep",
+    "model": "devmason_server.buildstep",
     "pk": 2,
     "fields": {
       "build": 1,

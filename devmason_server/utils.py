@@ -61,7 +61,7 @@ class HTMLTemplateEmitter(piston.emitters.Emitter):
         else:
             context = self.data
         return render_to_response(
-            'pony_server/%s.html' % self.handler.viewname.lower(),
+            'devmason_server/%s.html' % self.handler.viewname.lower(),
             context,
             context_instance = RequestContext(request),
         )

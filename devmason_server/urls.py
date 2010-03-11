@@ -8,19 +8,19 @@ urlpatterns = patterns('',
         name = 'project_list'
     ),
     url(r'builds/github',
-        'pony_server.views.github_build',
+        'devmason_server.views.github_build',
         name='github_build'
     ),
     url(r'builds/bitbucket',
-        'pony_server.views.bitbucket_build',
+        'devmason_server.views.bitbucket_build',
         name='bitbucket_build'
     ),
     url(r'builds/request',
-        'pony_server.views.request_build',
+        'devmason_server.views.request_build',
         name='request_build'
     ),
     url(r'xmlrpc',
-        'pony_server.views.xmlrpc',
+        'devmason_server.views.xmlrpc',
         name='xmlrpc'
     ),
     url(r'^(?P<slug>[\w-]+)$',
@@ -28,7 +28,7 @@ urlpatterns = patterns('',
         name = 'project_detail'
     ),
     url(r'^(?P<slug>[\w-]+)/claim$',
-        'pony_server.views.claim_project',
+        'devmason_server.views.claim_project',
         name = 'claim_project'
     ),
     url(r'^(?P<slug>[\w-]+)/builds$',

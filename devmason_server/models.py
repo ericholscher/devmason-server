@@ -38,7 +38,7 @@ class Build(models.Model):
     def get_absolute_url(self):
         return ('build_detail', [self.project.slug, self.pk])
 
-tagging.register(Build)
+#tagging.register(Build)
 
 class BuildStep(models.Model):
     build = models.ForeignKey(Build, related_name='steps')

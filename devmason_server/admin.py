@@ -1,5 +1,5 @@
 from django.contrib import admin
-from pony_server.models import Project, Build, BuildStep, BuildRequest, Repository
+from devmason_server.models import Project, Build, BuildStep, BuildRequest, Repository
 
 class BuildAdmin(admin.ModelAdmin):
     model = Build

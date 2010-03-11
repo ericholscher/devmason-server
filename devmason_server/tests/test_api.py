@@ -6,8 +6,8 @@ from django.utils import simplejson
 from ..models import Build
 
 class PonyTests(TestCase):
-    urls = 'pony_server.urls'
-    fixtures = ['authtestdata', 'pony_server_test_data']
+    urls = 'devmason_server.urls'
+    fixtures = ['authtestdata', 'devmason_server_test_data']
     
     def setUp(self):
         # Make this class's test client have a default Accept: header to

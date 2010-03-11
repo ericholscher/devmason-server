@@ -8,8 +8,8 @@ from SimpleXMLRPCServer import SimpleXMLRPCDispatcher
 from django.http import HttpResponse
 from django.core.handlers.wsgi import WSGIRequest
 
-from pony_server.models import Repository, BuildRequest, Project
-from pony_server.handlers import ProjectBuildListHandler
+from devmason_server.models import Repository, BuildRequest, Project
+from devmason_server.handlers import ProjectBuildListHandler
 from pony_utils.utils import slugify
 
 def claim_project(request, slug):

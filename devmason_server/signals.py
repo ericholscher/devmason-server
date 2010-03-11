@@ -2,7 +2,7 @@ import telnetlib
 import sys
 
 from django.db.models.signals import post_save
-from pony_server.models import Build
+from devmason_server.models import Build
 
 pw = "devmason_roxx"
 srv = "irc.freenode.net"
