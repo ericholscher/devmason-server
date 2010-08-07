@@ -22,7 +22,7 @@ Started: {{ build.started|date:"jS F H:i" }}<Br>
 Finished: {{ build.finished|date:"jS F H:i" }}<Br>
 <hr>
 {% for step in build.steps.all %}
-    <img width="14" src="{{ STATIC_MEDIA_URL }}/media/images/{{ step.success|yesno:"pass,fail" }}.png" />
+    <img width="14" src="{{ MEDIA_URL }}images/{{ step.success|yesno:"pass,fail" }}.png" />
     <strong>{{ step.name }}</strong><br>
 
 {% if step.output %}

@@ -9,7 +9,7 @@ Sweet Pony Build Results, yo!
    <p>
 <strong>{{ project }}</strong><Br>
 {% for build in builds %}
-    <img width="14" src="{{ STATIC_MEDIA_URL }}/media/images/{{ build.success|yesno:"pass,fail" }}.png" />
+    <img width="14" src="{{ MEDIA_URL }}images/{{ build.success|yesno:"pass,fail" }}.png" />
     <a href="{{ build.get_absolute_url }}">{{ build }}</a><Br>
 {% endfor %}
 

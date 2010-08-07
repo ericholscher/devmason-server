@@ -6,8 +6,7 @@
 
 <h3> What is this? </h3>
 <p>
-DevMason is a new service that runs your tests when you commit your code. It is currently in a private beta.
-<a href="/invites/">Request an Invite</a>
+DevMason is a new service that runs your tests when you commit your code.
 </p>
 
 <h3> Latest Builds </h3>
@@ -15,7 +14,7 @@ DevMason is a new service that runs your tests when you commit your code. It is 
 {% for build in latest_builds %}
 <li>
 <a href="{{ build.get_absolute_url }}">
-    <img width="14" src="{{ STATIC_MEDIA_URL }}/media/images/{{ build.success|yesno:"pass,fail" }}.png" />
+    <img width="14" src="{{ MEDIA_URL }}images/{{ build.success|yesno:"pass,fail" }}.png" />
 </a>
 <a href="{{ build.project.get_absolute_url }}"> 
     {{ build.project }} 
