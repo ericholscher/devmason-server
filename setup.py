@@ -9,5 +9,7 @@ setup(name='devmason_server',
       packages = ['devmason_server'],
       install_requires=['django-tagging>=0.3',
                         'django-piston>=0.2.2',
+                        'django-registration',
+                        'django',
                         'mimeparse>=0.1.2'],
 )
