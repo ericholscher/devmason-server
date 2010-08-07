@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block header %}
+Add Project
+{% endblock %}
+
+{% block title %}
+Add a project
+{% endblock %}
+
+{% block content %}
+  <div class="submit_project">
+    <form action="{% url project_add %}" method="post" class="change_form add_project_form">
+      <h3>Add project</h3>
+      {{ form.as_p}}
+      <p class="submit"><button type="submit">Submit</button></p>
+    </form>
+  </div>
+{% endblock %}
