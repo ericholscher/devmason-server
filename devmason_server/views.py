@@ -14,7 +14,7 @@ from django.template import RequestContext
 
 from devmason_server.models import Repository, BuildRequest, Project
 from devmason_server.handlers import ProjectBuildListHandler
-from devmason_utils.utils import slugify
+from devmason_server.utils import slugify
 from devmason_server.forms import ProjectForm
 
 def add_project(request, template_name='devmason_server/add_project.html'):
