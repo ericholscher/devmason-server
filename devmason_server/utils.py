@@ -2,6 +2,8 @@
 Piston API helpers.
 """
 
+import unicodedata
+import re
 import time
 import datetime
 import functools
@@ -185,3 +187,14 @@ if dateutil:
 else:
     def mk_datetime(string):
         return datetime.datetime.fromtimestamp(time.mktime(email.utils.parsedate(string)))
+
+def slugify(value):
+    """
+    Normalizes string, converts to lowercase, removes non-alpha characters,
+    and converts spaces to hyphens.
+    """
+    value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
+    value = unicode(re.sub('[^\w\s-]', '_', value).strip().lower())
+    return re.sub('[-\s]+', '-', value)
+
+
