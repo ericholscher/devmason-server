@@ -2,8 +2,7 @@ How to install Devmason Server
 ==============================
 
 Devmason is easy to install. It comes with a setup.py, so you can easily
-install it:
-
+install it::
 
     virtualenv devmason
     cd devmason/
