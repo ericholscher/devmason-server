@@ -1,0 +1,11 @@
+{% extends "registration/base.html" %}
+
+{% load i18n %}
+
+{% block title %}{% trans "Registration complete" %}{% endblock %}
+{% block page-title %}{% trans "Registration complete" %}{% endblock %}
+
+{% block content %}
+                    <p>{% trans "An activation link has been sent to the email address you supplied, along with instructions for activating your account." %}</p>
+                    <a href="/"> {% trans "Return to homepage." %}</a>
+{% endblock %}

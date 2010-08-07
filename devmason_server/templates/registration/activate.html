@@ -1,0 +1,28 @@
+{% extends "registration/base.html" %}
+{% load humanize %}
+{% load i18n %}
+
+{% block title %}{% if account %}
+                {% trans "Account activated" %}{% else %}{% trans "Activation problem occurred" %}
+{% endif %}{% endblock %}
+
+{% block page-title %}{% if account %}
+                {% trans "Account activated" %}{% else %}{% trans "Activation problem occurred" %}
+{% endif %}{% endblock %}
+
+{% block content %}{% if account %}
+<p>{% trans "Thanks for signing up! You can now log in to your account." %}></p>
+
+<p><a href="/accounts/login/">Log in</a></p>
+
+{# @todo: reenable after profiles app in place {% trans "edit your " %}<a href="{% url profile_edit %}">{% trans "profile" %}</a> #}
+{% else %}
+
+<p>{% blocktrans with expiration_days|apnumber as expiration_days %}
+Sorry, a problem occured. Either you already activated your account, your
+activation link was incorrect, or the activation key for your account has
+expired; activation keys are only valid for {{ expiration_days }} days after
+registration. Please contact us if you have any problems.
+{% endblocktrans %}</p>
+
+{% endif %}{% endblock %}

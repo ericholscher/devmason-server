@@ -1,0 +1,22 @@
+{% extends "registration/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Sign up" %}{% endblock %}
+{% block page-title %}{% trans "Sign up" %}{% endblock %}
+
+{% block content %}
+                    {% trans "Please fill out the form to create your account." %} {% trans "You'll then be sent an email with instructions on how to finish your registration." %}<br /><br />
+
+                    <form method="post" action="." class="wide">
+                        <div>
+                        {{ form.as_p }}
+                            <input type="submit" class="button" value="{% trans "Register" %}">
+                        </div>
+                    </form>
+{% endblock %}
+                    
+{% block footer %}
+                    <p>{% trans "Already have an account? " %} <a href="{% url auth_login %}">{% trans "Log in" %}</a>.</p>
+{% endblock %}
+
+{% block login %}{% endblock %}

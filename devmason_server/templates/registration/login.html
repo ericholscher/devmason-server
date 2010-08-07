@@ -1,0 +1,39 @@
+{% extends "registration/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Log in" %}{% endblock %}
+{% block page-title %}{% trans "Log in" %}{% endblock %}
+
+{% block content %}
+                {% if not user.is_authenticated %}
+                    {% if form.errors %}
+                    <p class="error">{% trans "Please correct the errors below:" %}{{ form.non_field_errors }}</p>
+                        {% endif %}
+
+                    <form method="post" action="?next={{ next|default:"/" }}">
+                        <div>
+                            <label for="id_username">{% trans "Username" %}</label>
+                            {{ form.username }}
+                            {% if form.username.errors %} <span class="error">{{ form.username.errors|join:", " }}</span>{% endif %}
+                        </div>
+                        <div>
+                            <label for="id_password">{% trans "Password" %}</label>
+                            {{ form.password }}
+                            <div class="forgot"><a href="/accounts/password/reset/">{% trans "Forget your password?" %}</a></div>
+                            {% if form.password.errors %} <span class="error">{{ form.password.errors|join:", " }}</span>{% endif %}
+                        </div>
+                            
+                        <input type="submit" class="button" value="{% trans "Log in" %}" />
+
+                    </form>
+                {% else %}
+                    <p>{% trans "You are already logged in as:" %} <b>{{ user.email|escape }}</b></p>
+                    <p><a href="/accounts/logout/?next=/login" class="admin">{% trans "Log Out" %}</a></p>
+                {% endif %}
+{% endblock %}
+
+{% block footer %}
+        {% if not user.is_authenticated %}
+        <p>{% trans "Don't have an account?" %} <a href="/accounts/register/">{% trans "Sign up." %}</a></p>
+        {% endif %}
+{% endblock %}
