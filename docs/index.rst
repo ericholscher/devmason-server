@@ -1,10 +1,9 @@
-.. Devmason Server documentation master file, created by
-   sphinx-quickstart on Wed Mar 10 20:09:21 2010.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to Devmason Server's documentation!
 ===========================================
+
+This is a server that is meant to be used for reporting test results of tests.
+Currently it's main focus is on Python, but there's no reason that it can't
+support other types of test results.
 
 Contents:
 
@@ -13,11 +12,3 @@ Contents:
    :glob:
 
    *
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-

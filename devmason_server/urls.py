@@ -19,6 +19,10 @@ urlpatterns = patterns('',
         'devmason_server.views.request_build',
         name='request_build'
     ),
+    url(r'add_project',
+        'devmason_server.views.add_project',
+        name='project_add'
+    ),
     url(r'xmlrpc',
         'devmason_server.views.xmlrpc',
         name='xmlrpc'

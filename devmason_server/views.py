@@ -5,12 +5,38 @@ except:
 
 import datetime
 from SimpleXMLRPCServer import SimpleXMLRPCDispatcher
-from django.http import HttpResponse
+
+from django.shortcuts import render_to_response
+from django.http import HttpResponse, HttpResponseRedirect
 from django.core.handlers.wsgi import WSGIRequest
+from django.template import RequestContext
+
 
 from devmason_server.models import Repository, BuildRequest, Project
 from devmason_server.handlers import ProjectBuildListHandler
 from devmason_utils.utils import slugify
+from devmason_server.forms import ProjectForm
+
+def add_project(request, template_name='devmason_server/add_project.html'):
+    """
+    Add project
+
+    Template: ``projects/new_project.html``
+    Context:
+        form
+            Form object.
+    """
+    form = ProjectForm(request.POST or None)
+    if form.is_valid():
+        project, created = Project.objects.get_or_create(name=form.cleaned_data['name'],
+                                                         slug=slugify(form.cleaned_data['name']))
+        repo, created = Repository.objects.get_or_create(
+         url=form.cleaned_data['source_repo'],
+         project=project,
+        )
+        return HttpResponseRedirect(project.get_absolute_url())
+    return render_to_response(template_name, {'form': form},
+            context_instance=RequestContext(request))
 
 def claim_project(request, slug):
     project = Project.objects.get(slug=slug)
