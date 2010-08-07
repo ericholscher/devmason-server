@@ -110,7 +110,7 @@ def _get_user(request):
     `AnonymousUser` if there's no Authorization header, or `None` if there was
     an invalid `Authorization` header.
     """
-    if 'HTTP_AUTHORIZATION' not in request.META:
+    if 'HTTP_AUTHORIZATION' not in request.META or not request.META['HTTP_AUTHORIZATION']:
         return AnonymousUser(), None
 
     # Get or create a user from the Authorization header.
