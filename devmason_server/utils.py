@@ -41,13 +41,6 @@ class Resource(piston.resource.Resource):
         if not em:
             em = request.GET.get('format', None)
 
-        # Then try the accept header
-        if not em and 'HTTP_ACCEPT' in request.META:
-            mime = mimeparse.best_match(['application/json', 'text/html'],
-                                        request.META['HTTP_ACCEPT'])
-            if mime:
-                em = mime.split('/')[-1]
-
         # Finally fall back on HTML
         return em or 'html'
 
