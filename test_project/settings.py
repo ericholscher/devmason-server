@@ -77,5 +77,9 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.admin',
     'tagging',
-    'devmason_server'
+    'devmason_server',
+    'devmason_utils',
 )
+
+
+TEST_RUNNER = 'devmason_utils.test_runner.run_tests'

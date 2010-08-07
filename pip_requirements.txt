@@ -1,1 +1,4 @@
 -e hg+http://bitbucket.org/ubernostrum/django-registration#egg=registration
+-e git://github.com/ericholscher/devmason-server.git#egg=devmason-server
+-e git://github.com/ericholscher/devmason-utils.git#egg=devmason-utils
+
